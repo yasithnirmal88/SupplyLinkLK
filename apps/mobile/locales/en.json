@@ -1,0 +1,261 @@
+{
+  "welcome": "Welcome to SupplyLink LK",
+  "tagline": "Connect farmers to buyers, directly.",
+  "subtitle": "Sri Lanka's verified agricultural supply chain — post what you grow, find what you need.",
+  "getStarted": "Get Started →",
+  "signIn": "Sign In",
+  "languageNote": "Available in Sinhala · English · Tamil",
+  "splash": {
+    "tagline1": "Connect farmers to buyers,",
+    "tagline2": "directly.",
+    "agricultural": "AGRICULTURAL MARKETPLACE · SRI LANKA"
+  },
+  "language": {
+    "title": "Choose Your Language",
+    "subtitle": "You can change this later in settings",
+    "english": "English",
+    "sinhala": "සිංහල",
+    "tamil": "தமிழ்",
+    "englishSub": "Continue in English",
+    "sinhalaSub": "සිංහලෙන් ඉදිරියට",
+    "tamilSub": "தமிழில் தொடරவும்",
+    "continue": "Continue"
+  },
+  "roles": {
+    "supplier": "Supplier",
+    "supplierDesc": "Farmers & growers",
+    "business": "Business",
+    "businessDesc": "Buyers & importers",
+    "title": "What best describes you?",
+    "subtitle": "Choose your role to get started",
+    "supplierCard": "I'm a Supplier",
+    "supplierCardDesc": "I grow crops and want to sell directly to businesses",
+    "businessCard": "I'm a Business",
+    "businessCardDesc": "I need to source fresh produce from local farmers",
+    "continue": "Continue"
+  },
+  "auth": {
+    "phoneNumber": "Phone Number",
+    "enterPhone": "Enter your mobile number",
+    "phoneSubtitle": "We'll send a verification code via SMS",
+    "sendOtp": "Send Verification Code",
+    "verifyOtp": "Verify OTP",
+    "enterOtp": "Enter the 6-digit code",
+    "otpSentTo": "Code sent to {{phone}}",
+    "resendOtp": "Resend Code",
+    "resendIn": "Resend in {{seconds}}s",
+    "phoneTitle": "Enter your phone number",
+    "phoneDescription": "We'll send you a one-time verification code",
+    "otpTitle": "Verification Code",
+    "otpDescription": "Enter the 6-digit code sent to",
+    "verifying": "Verifying...",
+    "sending": "Sending...",
+    "prefix": "+94",
+    "phonePlaceholder": "7X XXX XXXX",
+    "errors": {
+      "invalidPhone": "Please enter a valid Sri Lankan phone number",
+      "invalidOtp": "The code you entered is incorrect",
+      "expiredOtp": "This code has expired. Please request a new one",
+      "tooManyRequests": "Too many attempts. Please wait and try again",
+      "network": "Network error. Please check your connection",
+      "generic": "Something went wrong. Please try again"
+    }
+  },
+  "onboarding": {
+    "supplier": {
+      "progressBar": "Step {{current}} of {{total}}",
+      "profile": {
+        "title": "Complete Your Profile",
+        "subtitle": "Let buyers know who you are",
+        "name": "Full Name",
+        "namePlaceholder": "Enter your name",
+        "address": "Business Address",
+        "addressPlaceholder": "Enter your farm or business address",
+        "district": "District",
+        "districtPlaceholder": "Select your district",
+        "photoTitle": "Profile Photo",
+        "photoSubtitle": "Clear photo of your face or business logo",
+        "continue": "Continue"
+      },
+      "nic": {
+        "title": "NIC Verification",
+        "subtitle": "Upload clear photos of your National Identity Card",
+        "front": "NIC Front",
+        "back": "NIC Back",
+        "tapToUpload": "Tap to upload photo",
+        "continue": "Continue"
+      },
+      "selfie": {
+        "title": "ID Verification",
+        "subtitle": "Take a live selfie to confirm your identity",
+        "capture": "Capture Selfie",
+        "retake": "Retake",
+        "confirm": "Confirm Selfie"
+      },
+      "categories": {
+        "title": "What do you supply?",
+        "subtitle": "Select all crop categories you actively grow",
+        "instruction": "Each category requires a photo verification",
+        "continue": "Continue ({{count}} selected)"
+      },
+      "catSelfie": {
+        "title": "Verify Supply",
+        "subtitle": "Take a photo with your {{category}}",
+        "instruction": "This proves you have current stock available for trade",
+        "capture": "Verify {{category}}",
+        "next": "Verify Next Item"
+      },
+      "review": {
+        "title": "Review & Submit",
+        "subtitle": "Make sure all details are correct",
+        "personal": "Personal Details",
+        "documents": "Identity Documents",
+        "suppliedItems": "Supplied Categories",
+        "submit": "Submit for Review",
+        "submitting": "Submitting..."
+      },
+      "submitted": {
+        "title": "Under Review",
+        "subtitle": "Verification typically takes 24 hours",
+        "info": "We'll notify you via SMS once your account is approved. You can explore the marketplace in the meantime.",
+        "goHome": "Back to Home"
+      }
+    },
+    "business": {
+      "profile": {
+        "title": "Business Details",
+        "subtitle": "Tell us about your organization",
+        "bizName": "Business Name",
+        "bizPlaceholder": "e.g. FreshMart Sri Lanka",
+        "contactName": "Contact Person",
+        "contactPlaceholder": "Your full name",
+        "bizType": "Business Type",
+        "bizTypePlaceholder": "Select category",
+        "district": "Operating District",
+        "districtPlaceholder": "Select district",
+        "photoTitle": "Office/Store Photo",
+        "photoSubtitle": "Clear photo of your business location",
+        "continue": "Continue"
+      },
+      "reg": {
+        "title": "Business Registration",
+        "subtitle": "Upload your BR certificate (Image or PDF)",
+        "tapToUpload": "Tap to upload file",
+        "continue": "Continue",
+        "fileSelected": "File selected: {{name}}"
+      },
+      "review": {
+        "title": "Review Business Profile",
+        "subtitle": "Verify all legal details before submission",
+        "business": "Business Information",
+        "kyc": "KYC Documents",
+        "submit": "Submit Application",
+        "submitting": "Submitting..."
+      }
+    }
+  },
+  "districts": {
+    "colombo": "Colombo",
+    "gampaha": "Gampaha",
+    "kalutara": "Kalutara",
+    "kandy": "Kandy",
+    "matale": "Matale",
+    "nuwara_eliya": "Nuwara Eliya",
+    "galle": "Galle",
+    "matara": "Matara",
+    "hambantota": "Hambantota",
+    "jaffna": "Jaffna",
+    "kilinochchi": "Kilinochchi",
+    "mannar": "Mannar",
+    "vavuniya": "Vavuniya",
+    "mullaaitivu": "Mullaaitivu",
+    "batticaloa": "Batticaloa",
+    "ampara": "Ampara",
+    "trincomalee": "Trincomalee",
+    "kurunegala": "Kurunegala",
+    "puttalam": "Puttalam",
+    "anuradhapura": "Anuradhapura",
+    "polonnaruwa": "Polonnaruwa",
+    "badulla": "Badulla",
+    "moneragala": "Moneragala",
+    "ratnapura": "Ratnapura",
+    "kejalle": "Kegalle"
+  },
+  "cat": {
+    "coconuts": "Coconuts",
+    "vegetables": "Vegetables",
+    "fruits": "Fruits",
+    "grains": "Rice & Grains",
+    "spices": "Spices",
+    "herbs": "Herbs",
+    "eggs": "Eggs",
+    "dairy": "Dairy",
+    "other": "Other"
+  },
+  "nav": {
+    "home": "Home",
+    "discover": "Discover",
+    "post": "Post",
+    "messages": "Messages",
+    "profile": "Profile"
+  },
+  "home": {
+    "goodMorning": "Good morning",
+    "goodAfternoon": "Good afternoon",
+    "goodEvening": "Good evening",
+    "verified": "Verified",
+    "searchPlaceholder": "Search crops, districts...",
+    "openDemands": "Open Demands",
+    "supplyAdsNearby": "Supply Ads Nearby",
+    "seeAll": "See all",
+    "makeOffer": "Make Offer",
+    "offersReceived": "{{count}} offers received",
+    "deadline": "Deadline: {{days}} days",
+    "available": "available",
+    "perUnit": "/ {{unit}}"
+  },
+  "kyc": {
+    "title": "KYC Verification",
+    "uploadNic": "Upload NIC Documents",
+    "nicDescription": "Clear photos of your National Identity Card are required for identity verification.",
+    "nicFront": "NIC Front",
+    "nicBack": "NIC Back",
+    "tapToUpload": "Tap to take photo or upload",
+    "securityNote": "All submitted IDs are reviewed by our team within 24 hours. Your data is encrypted and stored securely.",
+    "continue": "Continue →",
+    "step": "Step {{current}} of {{total}}"
+  },
+  "chat": {
+    "verifiedConnection": "Verified connection — chat unlocked after KYC approval",
+    "online": "Online",
+    "typeMessage": "Type a message...",
+    "send": "Send"
+  },
+  "categories": {
+    "all": "All",
+    "vegetables": "Vegetables",
+    "fruits": "Fruits",
+    "spices": "Spices",
+    "grains": "Grains",
+    "herbs": "Herbs",
+    "other": "Other"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "open": "OPEN",
+    "closed": "CLOSED",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "currency": "Rs."
+}

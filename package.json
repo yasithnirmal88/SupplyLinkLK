@@ -1,0 +1,14 @@
+{
+  "name": "supplylink-lk-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "admin": "npm run dev --workspace=@supplylink/admin",
+    "mobile": "npm run start --workspace=@supplylink/mobile",
+    "backend": "npm run dev --workspace=@supplylink/backend"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

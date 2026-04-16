@@ -32,7 +32,7 @@ export default function PostScreen() {
         </Text>
 
         <Pressable 
-          onPress={() => isSupplier ? router.push('/post/supply-ad') : alert('Demand post coming soon')}
+          onPress={() => isSupplier ? router.push('/post/supply-ad') : router.push('/post/demand-post')}
           className="bg-primary-green p-8 rounded-[2.5rem] shadow-xl shadow-emerald-900/40 mb-6 active:scale-[0.98] transition-transform"
         >
           <View className="flex-row justify-between items-center mb-6">

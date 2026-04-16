@@ -148,8 +148,25 @@ export default function HomeFeedScreen() {
             ) : (
               data.map((item) => (
                 isSupplier 
-                  ? <DemandCard key={item.id} post={item} onPress={() => {}} />
-                  : <SupplyCard key={item.id} ad={item} onPress={() => {}} />
+                  ? <DemandCard 
+                      key={item.id} 
+                      post={item} 
+                      onPress={() => router.push({
+                        pathname: '/offers/submit',
+                        params: { 
+                          postId: item.id, 
+                          title: item.title, 
+                          qtyNeeded: item.totalQuantity, 
+                          unit: item.unit,
+                          businessName: item.businessName 
+                        }
+                      })} 
+                    />
+                  : <SupplyCard 
+                      key={item.id} 
+                      ad={item} 
+                      onPress={() => alert('Viewing Ad Detail soon')} 
+                    />
               ))
             )}
           </View>

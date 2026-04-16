@@ -10,7 +10,8 @@ import {
   ShieldCheck,
   CreditCard,
   User,
-  BadgeCheck
+  BadgeCheck,
+  TrendingUp
 } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '../../constants/Colors';
@@ -23,8 +24,11 @@ export default function ProfileScreen() {
     await logout();
   };
 
-  const ProfileItem = ({ icon: Icon, label, color = "#64748B" }: any) => (
-    <Pressable className="flex-row items-center bg-white px-6 py-4 mb-2 rounded-2xl border border-slate-50 active:bg-slate-50">
+  const ProfileItem = ({ icon: Icon, label, color = "#64748B", onPress }: any) => (
+    <Pressable 
+      onPress={onPress}
+      className="flex-row items-center bg-white px-6 py-4 mb-2 rounded-2xl border border-slate-50 active:bg-slate-50"
+    >
        <View className="w-10 h-10 rounded-xl bg-slate-50 items-center justify-center mr-4">
           <Icon size={20} color={color} />
        </View>
@@ -82,6 +86,12 @@ export default function ProfileScreen() {
 
         <View className="px-6 pt-8 pb-20">
            <Text className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 ml-2">Personal Settings</Text>
+           <ProfileItem 
+              icon={TrendingUp} 
+              label="View My Performance Analytics" 
+              color={COLORS.primaryGreen}
+              onPress={() => router.push('/analytics')}
+           />
            <ProfileItem icon={User} label="Edit Profile Information" />
            <ProfileItem icon={MapPin} label="Manage Pickup Locations" />
            <ProfileItem icon={CreditCard} label="Payment & Payouts" />

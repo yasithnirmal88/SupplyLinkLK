@@ -6,6 +6,7 @@ import { View, ActivityIndicator } from 'react-native';
 import i18n from '../services/i18n';
 import { useAuthStore } from '../stores/authStore';
 import { onAuthChange, getUserProfile } from '../services/auth';
+import { useNotifications } from '../services/notifications';
 import "../global.css";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
@@ -19,7 +20,10 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     loadLanguage,
     language,
     role,
+    uid,
   } = useAuthStore();
+
+  useNotifications();
 
   const [isReady, setIsReady] = useState(false);
 

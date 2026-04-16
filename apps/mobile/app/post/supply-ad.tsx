@@ -29,6 +29,9 @@ import { useAuthStore } from '../../stores/authStore';
 import { apiClient } from '../../services/api';
 import { uploadImage } from '../../services/storage';
 import { COLORS } from '../../constants/Colors';
+import { SubscriptionGuardModal } from '../../components/subscription/SubscriptionGuardModal';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 
 const supplyAdSchema = z.object({
   category: z.string().min(1, 'Category is required'),
@@ -59,6 +62,7 @@ export default function SupplyAdScreen() {
   const [loading, setLoading] = useState(false);
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showUntilPicker, setShowUntilPicker] = useState(false);
+  const [showSubscriptionGuard, setShowSubscriptionGuard] = useState(false);
 
   const { control, handleSubmit, formState: { errors } } = useForm<SupplyAdFormValues>({
     resolver: zodResolver(supplyAdSchema),
@@ -97,13 +101,25 @@ export default function SupplyAdScreen() {
   };
 
   const onSubmit = async (data: SupplyAdFormValues) => {
-    if (photos.length === 0) {
-      Alert.alert('Missing Photo', 'Please attach at least one photo of your produce.');
-      return;
-    }
-
     setLoading(true);
     try {
+      // Freemium Verification
+      const p = useAuthStore.getState().plan;
+      if (!p || p === 'free') {
+        const q = query(collection(db, 'supplyAds'), where('supplierId', '==', uid), where('status', '==', 'active'));
+        const snap = await getDocs(q);
+        if (snap.size >= 3) {
+           setShowSubscriptionGuard(true);
+           setLoading(false);
+           return;
+        }
+      }
+
+      if (photos.length === 0) {
+        Alert.alert('Missing Photo', 'Please attach at least one photo of your produce.');
+        setLoading(false);
+        return;
+      }
       const adId = `ad_${Date.now()}`;
       
       // Upload photos sequentially or concurrently
@@ -389,6 +405,13 @@ export default function SupplyAdScreen() {
             )}
          </Pressable>
       </View>
+
+      <SubscriptionGuardModal
+        isVisible={showSubscriptionGuard}
+        onClose={() => setShowSubscriptionGuard(false)}
+        title="Listing Limit Reached"
+        description="Free suppliers can have up to 3 active ads. Upgrade to Pro for unlimited listings and priority search placement."
+      />
     </View>
   );
 }

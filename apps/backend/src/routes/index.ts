@@ -2,6 +2,7 @@ import { Router } from 'express';
 import authRouter from './auth';
 import kycRouter from './kyc';
 import adminRouter from './admin';
+import supplyAdsRouter from './supplyAds';
 
 const router = Router();
 
@@ -9,6 +10,7 @@ const router = Router();
 router.use('/auth', authRouter);
 router.use('/kyc', kycRouter);
 router.use('/admin', adminRouter);
+router.use('/supply-ads', supplyAdsRouter);
 
 // Future routes:
 // router.use('/users', usersRouter);

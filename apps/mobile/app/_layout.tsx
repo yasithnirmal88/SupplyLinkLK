@@ -7,7 +7,14 @@ import i18n from '../services/i18n';
 import { useAuthStore } from '../stores/authStore';
 import { onAuthChange, getUserProfile } from '../services/auth';
 import { useNotifications } from '../services/notifications';
+import * as Sentry from '@sentry/react-native';
+import { OfflineBanner } from '../components/common/OfflineBanner';
 import "../global.css";
+
+Sentry.init({
+  dsn: 'https://example-dsn@sentry.io/123', // Replace with real DSN
+  debug: false
+});
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -111,6 +118,7 @@ export default function RootLayout() {
   return (
     <I18nextProvider i18n={i18n}>
       <SafeAreaProvider>
+        <OfflineBanner />
         <AuthGate>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />

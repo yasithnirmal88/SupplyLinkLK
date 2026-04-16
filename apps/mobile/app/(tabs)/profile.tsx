@@ -1,5 +1,13 @@
-import React from 'react';
-import { View, Text, ScrollView, Pressable, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { 
+  View, 
+  Text, 
+  ScrollView, 
+  Pressable, 
+  Image,
+  ActivityIndicator,
+  Alert
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
   Settings, 
@@ -11,20 +19,77 @@ import {
   CreditCard,
   User,
   BadgeCheck,
-  TrendingUp
+  TrendingUp,
+  Package,
+  Layers,
+  MessageSquare,
+  Award,
+  Star as StarIcon,
+  Calendar,
+  Camera
 } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { Image as ExpoImage } from 'expo-image';
+import * as Haptics from 'expo-haptics';
+
 import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '../../constants/Colors';
+import { logout } from '../../services/auth';
+import { db } from '../../services/firebase';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { uploadImage } from '../../services/storage';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const { displayName, role, district, logout } = useAuthStore();
+  const router = useRouter();
+  const { uid, role, displayName, phoneNumber, logout: clearStore } = useAuthStore();
+  
+  const [profileData, setProfileData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (!uid) return;
+    const fetchProfile = async () => {
+      const snap = await getDoc(doc(db, 'users', uid));
+      if (snap.exists()) setProfileData(snap.data());
+      setLoading(false);
+    };
+    fetchProfile();
+  }, [uid]);
 
   const handleLogout = async () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     await logout();
+    clearStore();
+    router.replace('/(auth)/splash');
   };
 
-  const ProfileItem = ({ icon: Icon, label, color = "#64748B", onPress }: any) => (
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      setUploading(true);
+      try {
+        const url = await uploadImage(result.assets[0].uri, `profiles/${uid}.jpg`);
+        await updateDoc(doc(db, 'users', uid), { photoUrl: url });
+        setProfileData({ ...profileData, photoUrl: url });
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch (e) {
+        Alert.alert('Error', 'Failed to upload photo');
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
+  const ProfileItem = ({ icon: Icon, label, color = "#64748B", onPress, badge }: any) => (
     <Pressable 
       onPress={onPress}
       className="flex-row items-center bg-white px-6 py-4 mb-2 rounded-2xl border border-slate-50 active:bg-slate-50"
@@ -32,87 +97,121 @@ export default function ProfileScreen() {
        <View className="w-10 h-10 rounded-xl bg-slate-50 items-center justify-center mr-4">
           <Icon size={20} color={color} />
        </View>
-       <Text className="flex-1 font-bold text-slate-700">{label}</Text>
-       <ChevronRight size={18} color="#CBD5E1" />
+       <Text className="flex-1 text-slate-700 font-bold uppercase text-xs tracking-tight">{label}</Text>
+       {badge && (
+          <View className="bg-primary-green/10 px-2 py-1 rounded-lg mr-2">
+             <Text className="text-primary-green font-black text-[8px] uppercase">{badge}</Text>
+          </View>
+       )}
+       <ChevronRight size={16} color="#CBD5E1" />
     </Pressable>
   );
 
-  return (
-    <View className="flex-1 bg-slate-50">
-      <ScrollView className="flex-1">
-        {/* Header Profile */}
-        <View 
-          className="bg-primary-green px-8 pb-10 rounded-b-[3rem] shadow-xl shadow-emerald-900/40"
-          style={{ paddingTop: insets.top + 20 }}
-        >
-          <View className="flex-row items-center">
-             <View className="w-20 h-20 rounded-[2.5rem] bg-white p-1">
-                <View className="w-full h-full rounded-[2.2rem] bg-emerald-50 items-center justify-center">
-                   <User size={40} color={COLORS.primaryGreen} />
-                </View>
-             </View>
-             <View className="ml-5">
-                <View className="flex-row items-center">
-                   <Text className="text-2xl font-black text-white">{displayName}</Text>
-                   <View className="ml-2">
-                      <BadgeCheck size={20} color="white" fill={COLORS.primaryGreen} />
-                   </View>
-                </View>
-                <Text className="text-white/70 font-bold uppercase tracking-widest text-[10px] mt-1">
-                   {role} • Verified Account
-                </Text>
-             </View>
-          </View>
-        </View>
+  if (loading) return <View className="flex-1 items-center justify-center"><ActivityIndicator color={COLORS.primaryGreen} /></View>;
 
-        <View className="px-6 -mt-6">
-           <View className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex-row justify-around">
-              <View className="items-center">
-                 <Text className="text-slate-400 font-bold text-[10px] uppercase">My Ads</Text>
-                 <Text className="text-lg font-black text-slate-900">12</Text>
+  const isSupplier = role === 'supplier';
+  const isApproved = profileData?.verificationStatus === 'approved';
+
+  return (
+    <ScrollView 
+       className="flex-1 bg-slate-50"
+       showsVerticalScrollIndicator={false}
+       contentContainerStyle={{ paddingBottom: 100 }}
+    >
+        {/* Profile Header */}
+        <View className="bg-white px-8 pb-10 pt-16 rounded-b-[4rem] shadow-sm shadow-slate-200">
+           <View className="flex-row justify-between items-start mb-8">
+              <View>
+                 <Text className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] mb-1">
+                    {profileData?.plan === 'pro' ? '🏆 Pro Participant' : 'Starter Account'}
+                 </Text>
+                 <View className="flex-row items-center">
+                    <Text className="text-3xl font-black text-slate-900 uppercase tracking-tight mr-2">{displayName}</Text>
+                    {isApproved && <ShieldCheck size={24} color={COLORS.primaryGreen} fill={COLORS.primaryGreen + '20'} />}
+                 </View>
+                 <Text className="text-slate-400 font-bold text-sm mt-1 flex-row items-center">
+                    <MapPin size={12} color="#94A3B8" /> {profileData?.district || 'Western District'}
+                 </Text>
               </View>
-              <View className="w-[1px] h-10 bg-slate-100" />
-              <View className="items-center">
-                 <Text className="text-slate-400 font-bold text-[10px] uppercase">Rating</Text>
-                 <Text className="text-lg font-black text-slate-900">4.8</Text>
+              <Pressable onPress={pickImage} className="relative">
+                 <View className="w-20 h-20 rounded-[2rem] bg-slate-100 overflow-hidden border-4 border-slate-50 shadow-md">
+                   {profileData?.photoUrl ? (
+                      <ExpoImage source={{ uri: profileData.photoUrl }} className="w-full h-full" transition={1000} />
+                   ) : (
+                      <View className="w-full h-full items-center justify-center"><User size={32} color="#CBD5E1" /></View>
+                   )}
+                 </View>
+                 <View className="absolute bottom-0 right-0 bg-primary-green w-7 h-7 rounded-full items-center justify-center border-2 border-white">
+                    {uploading ? <ActivityIndicator size="small" color="white" /> : <Camera size={14} color="white" />}
+                 </View>
+              </Pressable>
+           </View>
+
+           <View className="flex-row gap-4">
+              <View className="flex-1 bg-slate-50 p-4 rounded-3xl items-center border border-slate-100">
+                 <View className="flex-row items-center mb-1">
+                    <StarIcon size={14} color="#FBBF24" fill="#FBBF24" />
+                    <Text className="text-lg font-black text-slate-900 ml-1">{profileData?.averageRating || '5.0'}</Text>
+                 </View>
+                 <Text className="text-[10px] font-bold text-slate-400 uppercase">{profileData?.reviewCount || '0'} Reviews</Text>
               </View>
-              <View className="w-[1px] h-10 bg-slate-100" />
-              <View className="items-center">
-                 <Text className="text-slate-400 font-bold text-[10px] uppercase">Deals</Text>
-                 <Text className="text-lg font-black text-slate-900">240</Text>
+              <View className="flex-1 bg-slate-50 p-4 rounded-3xl items-center border border-slate-100">
+                 <Calendar size={14} color="#94A3B8" />
+                 <Text className="text-[10px] font-bold text-slate-400 uppercase mt-1">Since {new Date(profileData?.createdAt).getFullYear()}</Text>
               </View>
            </View>
         </View>
 
-        <View className="px-6 pt-8 pb-20">
-           <Text className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 ml-2">Personal Settings</Text>
+        <View className="px-6 mt-8">
+           <Text className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 ml-2">Marketplace Management</Text>
+           {isSupplier ? (
+             <>
+                <ProfileItem 
+                  icon={Package} label="My Active Supply Ads" 
+                  onPress={() => alert('Feature coming soon')} 
+                />
+                <ProfileItem 
+                  icon={Layers} label="Proposals & Offers" 
+                  onPress={() => alert('Feature coming soon')} 
+                />
+             </>
+           ) : (
+             <>
+                <ProfileItem 
+                  icon={Package} label="Our Demand Posts" 
+                  onPress={() => alert('Feature coming soon')} 
+                />
+                <ProfileItem 
+                  icon={Layers} label="Browse Received Offers" 
+                  onPress={() => alert('Feature coming soon')} 
+                />
+             </>
+           )}
            <ProfileItem 
-              icon={TrendingUp} 
-              label="View My Performance Analytics" 
+              icon={TrendingUp} label="Business Analytics" 
               color={COLORS.primaryGreen}
               onPress={() => router.push('/analytics')}
            />
-           <ProfileItem icon={User} label="Edit Profile Information" />
-           <ProfileItem icon={MapPin} label="Manage Pickup Locations" />
-           <ProfileItem icon={CreditCard} label="Payment & Payouts" />
-           
-           <Text className="text-xs font-black text-slate-400 uppercase tracking-widest mt-8 mb-4 ml-2">Security & Help</Text>
-           <ProfileItem icon={ShieldCheck} label="Account Security" color={COLORS.primaryGreen} />
-           <ProfileItem icon={Info} label="Support Center" />
-           
+
+           <Text className="text-xs font-black text-slate-400 uppercase tracking-widest mt-8 mb-4 ml-2">Account Settings</Text>
+           <ProfileItem icon={BadgeCheck} label="Verification Status" badge={profileData?.verificationStatus} />
+           <ProfileItem icon={CreditCard} label="Billing & Payouts" />
+           <ProfileItem 
+              icon={Settings} label="App Settings & Privacy" 
+              onPress={() => router.push('/settings')}
+           />
+
+           <Text className="text-xs font-black text-slate-400 uppercase tracking-widest mt-8 mb-4 ml-2">Support & Legal</Text>
+           <ProfileItem icon={Info} label="Help Center & Support" />
+           <ProfileItem icon={ShieldCheck} label="Privacy Policy" />
+
            <Pressable 
-            onPress={handleLogout}
-            className="flex-row items-center bg-rose-50 px-6 py-5 mt-8 rounded-2xl border border-rose-100 active:bg-rose-100"
+              onPress={handleLogout}
+              className="mt-12 mb-20 flex-row items-center justify-center py-4 bg-rose-50 rounded-2xl border border-rose-100"
            >
               <LogOut size={20} color="#F43F5E" />
-              <Text className="ml-4 font-black text-rose-500 uppercase text-xs tracking-widest">Sign Out Account</Text>
+              <Text className="ml-3 text-rose-500 font-black uppercase text-xs tracking-tight">Logout from Account</Text>
            </Pressable>
-
-           <Text className="text-center text-slate-300 font-bold text-[10px] mt-10 uppercase tracking-widest">
-              SupplyLink LK • Version 1.0.0 (Build 42)
-           </Text>
-        </View>
-      </ScrollView>
     </View>
   );
 }

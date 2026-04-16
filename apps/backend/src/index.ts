@@ -1,10 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+
+dotenv.config({ path: __dirname + '/../.env' }); // Load .env from backend root
+
 import './firebase-admin'; // Ensure Firebase Admin is initialized
 import routes from './routes';
-
-dotenv.config({ path: '../../.env' });
 
 const app = express();
 const PORT = process.env.PORT || 3000;

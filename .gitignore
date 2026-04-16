@@ -38,3 +38,7 @@ build/
 
 # Metro
 .metro-health-check*
+
+# Firebase Admin SDK Key - NEVER commit this
+**/firebase-adminsdk*.json
+*fbsvc*.json

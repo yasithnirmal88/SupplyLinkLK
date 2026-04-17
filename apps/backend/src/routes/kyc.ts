@@ -1,3 +1,4 @@
+import { Router } from 'express';
 import { submitKyc, submitBusinessKyc } from '../controllers/kycController';
 import { authMiddleware } from '../middleware/auth';
 

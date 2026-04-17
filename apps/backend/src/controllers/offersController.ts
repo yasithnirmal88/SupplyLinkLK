@@ -4,20 +4,15 @@ import { COLLECTIONS } from '../constants/collections';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { sendNotification } from '../services/notificationService';
 
-/**
- * POST /api/v1/offers
- * 
- * Create a new offer for a demand post.
- */
 export async function createOffer(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     const { uid } = req;
-    const { 
-      demandPostId, 
-      quantityOffered, 
-      pricePerUnit, 
-      availableByDate, 
-      notes 
+    const {
+      demandPostId,
+      quantityOffered,
+      pricePerUnit,
+      availableByDate,
+      notes
     } = req.body;
 
     if (!uid) {
@@ -33,7 +28,6 @@ export async function createOffer(req: AuthenticatedRequest, res: Response): Pro
        return;
     }
 
-    // Verify demand post exists and is open
     const postRef = adminDb.collection(COLLECTIONS.DEMAND_POSTS).doc(demandPostId);
     const postDoc = await postRef.get();
 
@@ -52,7 +46,6 @@ export async function createOffer(req: AuthenticatedRequest, res: Response): Pro
     const offerRef = adminDb.collection(COLLECTIONS.OFFERS).doc();
 
     await adminDb.runTransaction(async (transaction) => {
-       // 1. Create Offer
        transaction.set(offerRef, {
           offerId: offerRef.id,
           demandPostId,
@@ -69,16 +62,13 @@ export async function createOffer(req: AuthenticatedRequest, res: Response): Pro
           updatedAt: now
        });
 
-       // 2. Increment offerCount on post
        transaction.update(postRef, {
           offerCount: (postData.offerCount || 0) + 1,
           updatedAt: now
        });
     });
 
-    // 3. TODO: FCM to Business
     console.log(`[Notification] Offer submitted for ${postData.title} by ${userData.displayName}`);
-
     res.status(201).json({ message: 'Offer submitted successfully', offerId: offerRef.id });
 
   } catch (error: any) {
@@ -87,11 +77,6 @@ export async function createOffer(req: AuthenticatedRequest, res: Response): Pro
   }
 }
 
-/**
- * PATCH /api/v1/offers/:offerId/accept
- * 
- * Logic for accepting offers and managing the quota fill status.
- */
 export async function acceptOffer(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     const { offerId } = req.params;
@@ -120,13 +105,15 @@ export async function acceptOffer(req: AuthenticatedRequest, res: Response): Pro
     const postDoc = await postRef.get();
     const postData = postDoc.data()!;
 
+    // ✅ FIX 1: Declare these OUTSIDE the transaction so they're accessible below
+    let businessName: string = 'Business';
+    const chatId = `${offerData.demandPostId}_${offerData.supplierId}`;
+
     await adminDb.runTransaction(async (transaction) => {
        const now = new Date().toISOString();
-       
-       // 1. Update Offer Status
+
        transaction.update(offerRef, { status: 'accepted', updatedAt: now });
 
-       // 2. Calculate new filled quantity
        const newFilledQty = (postData.filledQuantity || 0) + offerData.quantity;
        const isFullyFilled = newFilledQty >= postData.totalQuantity;
 
@@ -137,7 +124,6 @@ export async function acceptOffer(req: AuthenticatedRequest, res: Response): Pro
           newStatus = 'partially_filled';
        }
 
-       // 3. Update Post
        transaction.update(postRef, {
           filledQuantity: newFilledQty,
           status: newStatus,
@@ -145,12 +131,11 @@ export async function acceptOffer(req: AuthenticatedRequest, res: Response): Pro
           updatedAt: now
        });
 
-       // 4. Create Chat Session
-       const chatId = `${offerData.demandPostId}_${offerData.supplierId}`;
        const chatRef = adminDb.collection(COLLECTIONS.CHATS).doc(chatId);
-       
-       const businessUserDoc = await transaction.get(adminDb.collection(COLLECTIONS.USERS).doc(uid));
-       const businessName = businessUserDoc.data()?.displayName || 'Business';
+
+       const businessUserDoc = await transaction.get(adminDb.collection(COLLECTIONS.USERS).doc(uid!));
+       // ✅ FIX 2: Assign to the outer variable
+       businessName = businessUserDoc.data()?.displayName || 'Business';
 
        transaction.set(chatRef, {
           chatId,
@@ -161,41 +146,42 @@ export async function acceptOffer(req: AuthenticatedRequest, res: Response): Pro
           businessName: businessName,
           lastMessage: 'Negotiation Unlocked',
           lastMessageAt: now,
-          unreadCount: { 
-            [offerData.supplierId]: 1, 
-            [uid]: 0 
+          unreadCount: {
+            // ✅ FIX 3: Cast supplierId to string for computed property
+            [offerData.supplierId as string]: 1,
+            [uid!]: 0
           },
           status: 'active',
           updatedAt: now,
           createdAt: now
        });
 
-       // 5. Initial System Message
        const msgRef = chatRef.collection('messages').doc();
        transaction.set(msgRef, {
           msgId: msgRef.id,
           senderId: 'system',
           senderName: 'System',
-          text: `🎉 Offer Accepted! You can now chat regarding ${postData.title}. quantity: ${offerData.quantity}${offerData.unit}.`,
+          // ✅ FIX 4: Add fallback for unit which could be undefined
+          text: `🎉 Offer Accepted! You can now chat regarding ${postData.title}. Quantity: ${offerData.quantity} ${offerData.unit ?? ''}.`,
           type: 'text',
           readBy: [],
           createdAt: now
        });
     });
 
-    // 6. Push + SMS + Unlock Chat Notification
+    // ✅ Now businessName and chatId are accessible here
     await sendNotification(offerData.supplierId, {
        title: '🤝 Offer Accepted!',
        body: `Great news! Your offer for ${postData.title} was accepted by ${businessName}. Start chatting now.`,
        type: 'offer_accepted',
        relatedId: chatId
-    }, { push: true, sms: true, phone: offerData.supplierPhone || '' }); // Assuming phone is in offer or user doc
+    }, { push: true, sms: true, phone: offerData.supplierPhone || '' });
 
     console.log(`[Notification] Offer ${offerId} accepted! Chat unlocked: ${chatId}`);
 
-    res.status(200).json({ 
+    res.status(200).json({
        message: 'Offer accepted and chat unlocked',
-       chatId: `${offerData.demandPostId}_${offerData.supplierId}`
+       chatId
     });
 
   } catch (error: any) {
@@ -212,10 +198,10 @@ export async function rejectOffer(req: AuthenticatedRequest, res: Response): Pro
 
     const offerRef = adminDb.collection(COLLECTIONS.OFFERS).doc(offerId);
     const offerDoc = await offerRef.get();
-    
-    if (!offerDoc.exists) return; // already checked middleware logic usually
+
+    if (!offerDoc.exists) return;
     const offerData = offerDoc.data()!;
-    
+
     if (offerData.businessId !== uid) {
        res.status(403).json({ error: 'Unauthorized' });
        return;

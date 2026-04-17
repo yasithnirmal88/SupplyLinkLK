@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { adminDb } from '../firebase-admin';
 import { COLLECTIONS } from '../constants/collections';

@@ -23,6 +23,8 @@ config.resolver.nodeModulesPaths = [
 config.resolver.extraNodeModules = {
   react: path.resolve(workspaceRoot, "node_modules/react"),
   "react-native": path.resolve(workspaceRoot, "node_modules/react-native"),
+  "expo-router": path.resolve(workspaceRoot, "node_modules/expo-router"),
+  "@react-navigation/native": path.resolve(workspaceRoot, "node_modules/@react-navigation/native"),
 };
 
 // 4. FIX FOR WEB — required for Expo SDK 55

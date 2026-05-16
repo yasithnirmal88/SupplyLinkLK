@@ -110,9 +110,9 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     return (
       <View
         className="flex-1 items-center justify-center"
-        style={{ backgroundColor: '#2D6A4F' }}
+        style={{ backgroundColor: '#FFFFFF' }}
       >
-        <ActivityIndicator size="large" color="#FFFFFF" />
+        <ActivityIndicator size="large" color="#2D6A4F" />
       </View>
     );
   }

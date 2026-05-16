@@ -15,7 +15,7 @@ export default function SubmittedScreen() {
 
   const handleGoHome = () => {
     reset();
-    router.replace('/(tabs)/home');
+    router.replace('/(tabs)');
   };
 
   return (

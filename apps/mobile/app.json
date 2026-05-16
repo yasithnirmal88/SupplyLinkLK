@@ -3,8 +3,9 @@
     "name": "SupplyLink LK",
     "slug": "supplylink-lk",
     "version": "1.0.0",
+    "newArchEnabled": true,
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon_new.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
@@ -16,18 +17,31 @@
       "bundleIdentifier": "com.supplylink.lk"
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon_new.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.supplylink.lk"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "@react-native-firebase/messaging"
     ],
     "scheme": "supplylink",
     "web": {
       "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": ""
+      },
+      "firebaseApiKey": "",
+      "firebaseAuthDomain": "",
+      "firebaseProjectId": "",
+      "firebaseStorageBucket": "",
+      "firebaseMessagingSenderId": "",
+      "firebaseAppId": ""
     }
   }
 }

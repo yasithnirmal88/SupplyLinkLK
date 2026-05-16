@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,13 @@ import {
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StatusBar } from 'expo-status-bar';
-import { MotiView, MotiText, AnimatePresence } from 'moti';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+} from 'react-native-reanimated';
 import { ChevronLeft, Phone, ArrowRight } from 'lucide-react-native';
-
 import { useAuthStore } from '../../stores/authStore';
 import { sendOtp, getAuthErrorKey } from '../../services/auth';
 import { COLORS } from '../../constants/Colors';
@@ -24,14 +28,55 @@ const LOGO_IMG = require('../../assets/logo.png');
 export default function PhoneScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-
-  const { setConfirmationResult, setLoading, setAuthError, isLoading, authError } =
-    useAuthStore();
-
+  const { setConfirmationResult, setLoading, setAuthError, isLoading, authError } = useAuthStore();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
-  // Format phone for display: 7X XXX XXXX
+  const header0 = useSharedValue(0);
+  const headerX = useSharedValue(-10);
+  const content0 = useSharedValue(0);
+  const contentY = useSharedValue(20);
+  const input0 = useSharedValue(0);
+  const inputY = useSharedValue(20);
+  const footer0 = useSharedValue(0);
+  const footerY = useSharedValue(20);
+  const error0 = useSharedValue(0);
+
+  useEffect(() => {
+    header0.value = withTiming(1, { duration: 400 });
+    headerX.value = withTiming(0, { duration: 400 });
+    content0.value = withTiming(1, { duration: 600 });
+    contentY.value = withTiming(0, { duration: 600 });
+    input0.value = withDelay(200, withTiming(1, { duration: 600 }));
+    inputY.value = withDelay(200, withTiming(0, { duration: 600 }));
+    footer0.value = withDelay(400, withTiming(1, { duration: 600 }));
+    footerY.value = withDelay(400, withTiming(0, { duration: 600 }));
+  }, []);
+
+  useEffect(() => {
+    error0.value = withTiming(authError ? 1 : 0, { duration: 300 });
+  }, [authError]);
+
+  const headerStyle = useAnimatedStyle(() => ({
+    opacity: header0.value,
+    transform: [{ translateX: headerX.value }],
+  }));
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity: content0.value,
+    transform: [{ translateY: contentY.value }],
+  }));
+  const inputStyle = useAnimatedStyle(() => ({
+    opacity: input0.value,
+    transform: [{ translateY: inputY.value }],
+  }));
+  const footerStyle = useAnimatedStyle(() => ({
+    opacity: footer0.value,
+    transform: [{ translateY: footerY.value }],
+  }));
+  const errorStyle = useAnimatedStyle(() => ({
+    opacity: error0.value,
+  }));
+
   const formatDisplay = (raw: string) => {
     const digits = raw.replace(/\D/g, '').slice(0, 9);
     if (digits.length <= 2) return digits;
@@ -43,22 +88,14 @@ export default function PhoneScreen() {
   const isValid = /^7[0-9]{8}$/.test(rawDigits);
 
   const handleSendOtp = useCallback(async () => {
-    if (!isValid) {
-      setAuthError(t('auth.errors.invalidPhone'));
-      return;
-    }
-
+    if (!isValid) { setAuthError(t('auth.errors.invalidPhone')); return; }
     setLoading(true);
     setAuthError(null);
-
     try {
       const fullNumber = `+94${rawDigits}`;
       const confirmationResult = await sendOtp(fullNumber);
       setConfirmationResult(confirmationResult);
-      router.push({
-        pathname: '/(auth)/otp',
-        params: { phone: fullNumber },
-      });
+      router.push({ pathname: '/(auth)/otp', params: { phone: fullNumber } });
     } catch (error: any) {
       const code = error?.code || '';
       setAuthError(t(getAuthErrorKey(code)));
@@ -69,70 +106,51 @@ export default function PhoneScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      style={{ flex: 1, backgroundColor: 'white' }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <StatusBar style="dark" />
+      <View style={{ flex: 1, paddingHorizontal: 32, paddingTop: 64, paddingBottom: 48 }}>
 
-      <View className="flex-1 px-8 pt-16 pb-12">
-        {/* Header Navigation */}
-        <MotiView 
-          from={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex-row items-center justify-between mb-12"
-        >
+        <Animated.View style={[headerStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 48 }]}>
           <Pressable
             onPress={() => router.back()}
-            className="w-12 h-12 rounded-2xl bg-slate-50 items-center justify-center border border-slate-100 active:scale-90"
+            style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#F1F5F9' }}
           >
             <ChevronLeft size={24} color={COLORS.textPrimary} />
           </Pressable>
-          <View className="items-center">
+          <View style={{ alignItems: 'center' }}>
             <Image source={LOGO_IMG} style={{ width: 100, height: 40 }} resizeMode="contain" />
           </View>
-          <View className="w-12" />
-        </MotiView>
+          <View style={{ width: 48 }} />
+        </Animated.View>
 
-        {/* Content */}
-        <View className="flex-1">
-          <MotiView
-            from={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'timing', duration: 600 }}
-          >
-            <View className="w-16 h-16 bg-emerald-50 rounded-3xl items-center justify-center mb-8">
+        <View style={{ flex: 1 }}>
+          <Animated.View style={contentStyle}>
+            <View style={{ width: 64, height: 64, backgroundColor: '#ECFDF5', borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
               <Phone size={32} color={COLORS.primaryGreen} />
             </View>
-            
-            <Text className="text-slate-900 text-4xl font-black leading-[1.1] mb-4">
+            <Text style={{ color: '#0F172A', fontSize: 36, fontWeight: '900', lineHeight: 40, marginBottom: 16 }}>
               Enter your{'\n'}phone number
             </Text>
-            <Text className="text-slate-400 text-lg font-medium leading-6 pr-10">
+            <Text style={{ color: '#94A3B8', fontSize: 17, fontWeight: '500', lineHeight: 24, paddingRight: 40 }}>
               We'll send a verification code to secure your account.
             </Text>
-          </MotiView>
+          </Animated.View>
 
-          {/* Input Section */}
-          <MotiView
-            from={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'timing', duration: 600, delay: 200 }}
-            className="mt-12"
-          >
-            <View 
-              className={`flex-row items-center rounded-3xl bg-slate-50 border-2 transition-all p-2 ${
-                isFocused ? 'border-primary-green bg-white shadow-sm' : 'border-transparent'
-              }`}
-            >
-              {/* Country Code */}
-              <View className="flex-row items-center px-4 py-3 bg-white rounded-2xl shadow-sm border border-slate-100 mr-2">
+          <Animated.View style={[inputStyle, { marginTop: 48 }]}>
+            <View style={{
+              flexDirection: 'row', alignItems: 'center', borderRadius: 24,
+              backgroundColor: isFocused ? 'white' : '#F8FAFC',
+              borderWidth: 2, borderColor: isFocused ? COLORS.primaryGreen : 'transparent',
+              padding: 8,
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: 'white', borderRadius: 16, borderWidth: 1, borderColor: '#F1F5F9', marginRight: 8 }}>
                 <Text style={{ fontSize: 20 }}>🇱🇰</Text>
-                <Text className="ml-2 font-black text-slate-900 text-lg">+94</Text>
+                <Text style={{ marginLeft: 8, fontWeight: '900', color: '#0F172A', fontSize: 17 }}>+94</Text>
               </View>
-
-              {/* Input */}
               <TextInput
-                className="flex-1 text-2xl font-black text-slate-900 px-4 py-4"
+                style={{ flex: 1, fontSize: 22, fontWeight: '900', color: '#0F172A', paddingHorizontal: 16, paddingVertical: 16 }}
                 placeholder="7X XXX XXXX"
                 placeholderTextColor="#CBD5E1"
                 keyboardType="phone-pad"
@@ -149,69 +167,45 @@ export default function PhoneScreen() {
               />
             </View>
 
-            <AnimatePresence>
-              {authError && (
-                <MotiText 
-                  from={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="text-red-500 font-bold mt-4 ml-2"
-                >
-                  ⚠️ {authError}
-                </MotiText>
-              )}
-            </AnimatePresence>
-          </MotiView>
+            {authError && (
+              <Animated.Text style={[errorStyle, { color: '#EF4444', fontWeight: '700', marginTop: 16, marginLeft: 8 }]}>
+                ⚠️ {authError}
+              </Animated.Text>
+            )}
+          </Animated.View>
         </View>
 
-        {/* Footer CTAs */}
-        <MotiView
-          from={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'timing', duration: 600, delay: 400 }}
-        >
-          <Text className="text-slate-400 text-center mb-8 text-sm px-6">
-            By continuing, you agree to our <Text className="text-slate-900 font-bold">Terms of Service</Text> and <Text className="text-slate-900 font-bold">Privacy Policy</Text>.
+        <Animated.View style={footerStyle}>
+          <Text style={{ color: '#94A3B8', textAlign: 'center', marginBottom: 32, fontSize: 13, paddingHorizontal: 24 }}>
+            By continuing, you agree to our{' '}
+            <Text style={{ color: '#0F172A', fontWeight: '700' }}>Terms of Service</Text>
+            {' '}and{' '}
+            <Text style={{ color: '#0F172A', fontWeight: '700' }}>Privacy Policy</Text>.
           </Text>
 
           <Pressable
             onPress={handleSendOtp}
             disabled={!isValid || isLoading}
-            className={`rounded-3xl py-6 flex-row items-center justify-center shadow-xl ${
-              isValid ? 'bg-primary-green shadow-primary-green/20' : 'bg-slate-200'
-            }`}
+            style={{
+              borderRadius: 24, paddingVertical: 22,
+              flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+              backgroundColor: isValid ? COLORS.primaryGreen : '#E2E8F0',
+              shadowColor: isValid ? COLORS.primaryGreen : 'transparent',
+              shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 8,
+            }}
           >
             {isLoading ? (
               <ActivityIndicator color="white" />
             ) : (
               <>
-                <Text className={`font-black text-lg mr-2 ${isValid ? 'text-white' : 'text-slate-400'}`}>
+                <Text style={{ fontWeight: '900', fontSize: 17, marginRight: 8, color: isValid ? 'white' : '#94A3B8' }}>
                   Send Verification Code
                 </Text>
                 <ArrowRight size={20} color={isValid ? 'white' : '#94A3B8'} />
               </>
             )}
           </Pressable>
-
-          {/* Dev Bypass Link */}
-          <Pressable
-            onPress={async () => {
-              useAuthStore.getState().setUser({
-                uid: 'dev-bypass-123',
-                phoneNumber: '+94770000000',
-                role: 'supplier',
-                verificationStatus: 'approved',
-                displayName: 'Test Dev User'
-              });
-              router.replace('/(tabs)');
-            }}
-            className="mt-6 py-2 items-center"
-          >
-            <Text className="text-slate-300 font-bold text-xs uppercase tracking-widest">
-              Dev Bypass Verification
-            </Text>
-          </Pressable>
-        </MotiView>
+        </Animated.View>
       </View>
     </KeyboardAvoidingView>
   );

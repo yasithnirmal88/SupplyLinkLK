@@ -1,10 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import Constants from 'expo-constants';
+import messaging from '@react-native-firebase/messaging';
 import { doc, updateDoc } from 'firebase/firestore';
-
 import { db } from './firebase';
 import { useAuthStore } from '../stores/authStore';
 
@@ -13,7 +11,6 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
-    // Newer SDKs expect these fields as well
     shouldShowBanner: true,
     shouldShowList: true,
   }),
@@ -34,12 +31,10 @@ export const useNotifications = () => {
     });
 
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      // Handle foreground notification
       console.log('Notification Received:', notification);
     });
 
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      // Handle user interaction with notification
       console.log('Notification Response:', response);
     });
 
@@ -54,42 +49,38 @@ export const useNotifications = () => {
   }, [uid]);
 };
 
-async function registerForPushNotificationsAsync() {
+async function registerForPushNotificationsAsync(): Promise<string | null> {
   if (Platform.OS === 'web') return null;
-  let token;
 
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#10B981',
-    });
-  }
+  try {
+    // Request FCM permission (iOS needs explicit request)
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-  if (Device.isDevice) {
-    const perm: any = await Notifications.getPermissionsAsync();
-    let finalStatus = perm.status ?? (perm.granted ? 'granted' : 'denied');
-
-    if (finalStatus !== 'granted') {
-      const res: any = await Notifications.requestPermissionsAsync();
-      finalStatus = res.status ?? (res.granted ? 'granted' : finalStatus);
+    if (!enabled) {
+      console.warn('Push notification permission denied');
+      return null;
     }
 
-    if (finalStatus !== 'granted') {
-      console.warn('Failed to get push token for push notification!');
-      return;
+    // Set up Android notification channel
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#10B981',
+      });
     }
 
-    // Replace with your Expo project ID or sender ID
-    token = (await Notifications.getExpoPushTokenAsync({
-       projectId: Constants.expoConfig?.extra?.eas?.projectId 
-    })).data;
-    
+    // Get FCM token directly — no Expo project ID needed
+    const token = await messaging().getToken();
     console.log('FCM Token:', token);
-  } else {
-    console.log('Must use physical device for Push Notifications');
-  }
+    return token;
 
-  return token;
+  } catch (error) {
+    console.warn('Failed to get FCM token:', error);
+    return null;
+  }
 }

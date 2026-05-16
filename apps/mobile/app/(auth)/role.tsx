@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StatusBar } from 'expo-status-bar';
-import { MotiView, MotiText, AnimatePresence } from 'moti';
-import { ChevronLeft, Check, User, Briefcase, ArrowRight } from 'lucide-react-native';
-
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
+import { ChevronLeft, Check, User, ArrowRight } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/authStore';
 import { updateUserRole } from '../../services/auth';
 import { COLORS } from '../../constants/Colors';
@@ -18,67 +17,68 @@ interface RoleCardProps {
   emoji: string;
   isSelected: boolean;
   onSelect: (role: Role) => void;
-  index: number;
 }
 
-const RoleCard: React.FC<RoleCardProps> = ({ role, title, description, emoji, isSelected, onSelect, index }) => {
-  return (
-    <MotiView
-      from={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 400 + index * 100 }}
-    >
-      <Pressable
-        onPress={() => onSelect(role)}
-        className={`p-6 rounded-[32px] border-2 flex-row items-center mb-4 transition-all ${
-          isSelected 
-            ? 'bg-primary-green border-primary-green shadow-xl shadow-primary-green/20' 
-            : 'bg-white border-slate-100'
-        }`}
-      >
-        <View className={`w-16 h-16 rounded-2xl items-center justify-center mr-5 ${
-          isSelected ? 'bg-white/20' : 'bg-slate-50'
-        }`}>
-          <Text style={{ fontSize: 32 }}>{emoji}</Text>
-        </View>
-        <View className="flex-1">
-          <Text className={`font-black text-xl mb-1 ${isSelected ? 'text-white' : 'text-slate-900'}`}>
-            {title}
-          </Text>
-          <Text className={`font-medium text-sm leading-5 ${isSelected ? 'text-white/70' : 'text-slate-400'}`}>
-            {description}
-          </Text>
-        </View>
-        <View className={`w-8 h-8 rounded-full items-center justify-center border-2 ${
-          isSelected ? 'bg-white border-white' : 'border-slate-200'
-        }`}>
-          {isSelected && <Check size={18} color={COLORS.primaryGreen} strokeWidth={4} />}
-        </View>
-      </Pressable>
-    </MotiView>
-  );
-};
+const RoleCard: React.FC<RoleCardProps> = ({ role, title, description, emoji, isSelected, onSelect }) => (
+  <Pressable
+    onPress={() => onSelect(role)}
+    style={{
+      padding: 24, borderRadius: 32, borderWidth: 2, flexDirection: 'row', alignItems: 'center', marginBottom: 16,
+      backgroundColor: isSelected ? COLORS.primaryGreen : 'white',
+      borderColor: isSelected ? COLORS.primaryGreen : '#F1F5F9',
+    }}
+  >
+    <View style={{ width: 64, height: 64, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: 20, backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : '#F8FAFC' }}>
+      <Text style={{ fontSize: 32 }}>{emoji}</Text>
+    </View>
+    <View style={{ flex: 1 }}>
+      <Text style={{ fontWeight: '900', fontSize: 20, marginBottom: 4, color: isSelected ? 'white' : '#0F172A' }}>{title}</Text>
+      <Text style={{ fontWeight: '500', fontSize: 13, lineHeight: 18, color: isSelected ? 'rgba(255,255,255,0.7)' : '#94A3B8' }}>{description}</Text>
+    </View>
+    <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 2, backgroundColor: isSelected ? 'white' : 'transparent', borderColor: isSelected ? 'white' : '#E2E8F0' }}>
+      {isSelected && <Check size={18} color={COLORS.primaryGreen} strokeWidth={4} />}
+    </View>
+  </Pressable>
+);
 
 export default function RoleScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const { uid, setRole, setLoading, isLoading } = useAuthStore();
-
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+
+  const header0 = useSharedValue(0);
+  const headerX = useSharedValue(-10);
+  const content0 = useSharedValue(0);
+  const contentY = useSharedValue(20);
+  const cards0 = useSharedValue(0);
+  const cardsY = useSharedValue(20);
+  const footer0 = useSharedValue(0);
+  const footerY = useSharedValue(20);
+
+  useEffect(() => {
+    header0.value = withTiming(1, { duration: 400 });
+    headerX.value = withTiming(0, { duration: 400 });
+    content0.value = withTiming(1, { duration: 600 });
+    contentY.value = withTiming(0, { duration: 600 });
+    cards0.value = withDelay(300, withTiming(1, { duration: 600 }));
+    cardsY.value = withDelay(300, withTiming(0, { duration: 600 }));
+    footer0.value = withDelay(600, withTiming(1, { duration: 600 }));
+    footerY.value = withDelay(600, withTiming(0, { duration: 600 }));
+  }, []);
+
+  const headerStyle = useAnimatedStyle(() => ({ opacity: header0.value, transform: [{ translateX: headerX.value }] }));
+  const contentStyle = useAnimatedStyle(() => ({ opacity: content0.value, transform: [{ translateY: contentY.value }] }));
+  const cardsStyle = useAnimatedStyle(() => ({ opacity: cards0.value, transform: [{ translateY: cardsY.value }] }));
+  const footerStyle = useAnimatedStyle(() => ({ opacity: footer0.value, transform: [{ translateY: footerY.value }] }));
 
   const handleContinue = async () => {
     if (!selectedRole || !uid) return;
-
     setLoading(true);
     try {
       await updateUserRole(uid, selectedRole);
       setRole(selectedRole);
-
-      const target = selectedRole === 'supplier' 
-        ? '/onboarding/supplier/profile' 
-        : '/onboarding/business/profile';
-      
-      router.replace(target);
+      router.replace(selectedRole === 'supplier' ? '/onboarding/supplier/profile' : '/onboarding/business/profile');
     } catch (error) {
       console.error('Failed to update role:', error);
     } finally {
@@ -87,94 +87,46 @@ export default function RoleScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View style={{ flex: 1, backgroundColor: 'white' }}>
       <StatusBar style="dark" />
-
-      <View className="flex-1 px-8 pt-16 pb-12">
-        {/* Header Navigation */}
-        <MotiView 
-          from={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex-row items-center justify-between mb-12"
-        >
-          <Pressable
-            onPress={() => router.back()}
-            className="w-12 h-12 rounded-2xl bg-slate-50 items-center justify-center border border-slate-100 active:scale-90"
-          >
+      <View style={{ flex: 1, paddingHorizontal: 32, paddingTop: 64, paddingBottom: 48 }}>
+        <Animated.View style={[headerStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 48 }]}>
+          <Pressable onPress={() => router.back()} style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#F1F5F9' }}>
             <ChevronLeft size={24} color={COLORS.textPrimary} />
           </Pressable>
-          <Text className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
-            Step 3 of 3
-          </Text>
-          <View className="w-12" />
-        </MotiView>
+          <Text style={{ color: '#94A3B8', fontWeight: '700', fontSize: 10, textTransform: 'uppercase', letterSpacing: 3 }}>Step 3 of 3</Text>
+          <View style={{ width: 48 }} />
+        </Animated.View>
 
-        {/* Content */}
-        <View className="flex-1">
-          <MotiView
-            from={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'timing', duration: 600 }}
-          >
-            <View className="w-16 h-16 bg-amber-50 rounded-3xl items-center justify-center mb-8">
+        <View style={{ flex: 1 }}>
+          <Animated.View style={contentStyle}>
+            <View style={{ width: 64, height: 64, backgroundColor: '#FFFBEB', borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
               <User size={32} color={COLORS.accentGold} />
             </View>
-            
-            <Text className="text-slate-900 text-4xl font-black leading-[1.1] mb-4">
-              How will you{'\n'}use SupplyLink?
-            </Text>
-            <Text className="text-slate-400 text-lg font-medium leading-6 pr-10">
-              Select your primary role to customize your experience.
-            </Text>
-          </MotiView>
+            <Text style={{ color: '#0F172A', fontSize: 36, fontWeight: '900', lineHeight: 40, marginBottom: 16 }}>How will you{'\n'}use SupplyLink?</Text>
+            <Text style={{ color: '#94A3B8', fontSize: 17, fontWeight: '500', lineHeight: 24, paddingRight: 40 }}>Select your primary role to customize your experience.</Text>
+          </Animated.View>
 
-          <View className="mt-12">
-            <RoleCard 
-              role="supplier"
-              emoji="🌿"
-              title="Individual Supplier"
-              description="I want to sell my crops and products directly to businesses."
-              isSelected={selectedRole === 'supplier'}
-              onSelect={setSelectedRole}
-              index={0}
-            />
-            <RoleCard 
-              role="business"
-              emoji="🏢"
-              title="Business Buyer"
-              description="I want to source quality products for my restaurant or shop."
-              isSelected={selectedRole === 'business'}
-              onSelect={setSelectedRole}
-              index={1}
-            />
-          </View>
+          <Animated.View style={[cardsStyle, { marginTop: 48 }]}>
+            <RoleCard role="supplier" emoji="🌿" title="Individual Supplier" description="I want to sell my crops and products directly to businesses." isSelected={selectedRole === 'supplier'} onSelect={setSelectedRole} />
+            <RoleCard role="business" emoji="🏢" title="Business Buyer" description="I want to source quality products for my restaurant or shop." isSelected={selectedRole === 'business'} onSelect={setSelectedRole} />
+          </Animated.View>
         </View>
 
-        {/* Footer CTAs */}
-        <MotiView
-          from={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'timing', duration: 600, delay: 600 }}
-        >
+        <Animated.View style={footerStyle}>
           <Pressable
             onPress={handleContinue}
             disabled={!selectedRole || isLoading}
-            className={`rounded-3xl py-6 flex-row items-center justify-center shadow-xl ${
-              selectedRole ? 'bg-primary-green shadow-primary-green/20' : 'bg-slate-200'
-            }`}
+            style={{ borderRadius: 24, paddingVertical: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: selectedRole ? COLORS.primaryGreen : '#E2E8F0' }}
           >
-            {isLoading ? (
-              <ActivityIndicator color="white" />
-            ) : (
+            {isLoading ? <ActivityIndicator color="white" /> : (
               <>
-                <Text className={`font-black text-lg mr-2 ${selectedRole ? 'text-white' : 'text-slate-400'}`}>
-                  Complete Profile Setup
-                </Text>
+                <Text style={{ fontWeight: '900', fontSize: 17, marginRight: 8, color: selectedRole ? 'white' : '#94A3B8' }}>Complete Profile Setup</Text>
                 <ArrowRight size={20} color={selectedRole ? 'white' : '#94A3B8'} />
               </>
             )}
           </Pressable>
-        </MotiView>
+        </Animated.View>
       </View>
     </View>
   );

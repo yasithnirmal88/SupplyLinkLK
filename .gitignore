@@ -20,6 +20,9 @@ ios/
 # Env
 .env
 .env.local
+.env.*
+.gemini/
+system_status_report.md
 
 # IDE
 .vscode/
@@ -42,6 +45,12 @@ build/
 # Firebase Admin SDK Key - NEVER commit this
 **/firebase-adminsdk*.json
 *fbsvc*.json
+*serviceAccount*.json
+serviceAccountKey.json
+google-services.json
+**/google-services.json
+GoogleService-Info.plist
+**/GoogleService-Info.plist
 
 # Old Node Modules
 node_modules_old/

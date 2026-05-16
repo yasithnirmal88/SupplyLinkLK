@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  Modal, 
-  TouchableOpacity, 
-  TextInput, 
-  KeyboardAvoidingView, 
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  TextInput,
+  KeyboardAvoidingView,
   Platform,
-  ActivityIndicator
+  ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import { X } from 'lucide-react-native';
 import { StarRating } from './StarRating';
-import { MotiView, AnimatePresence } from 'moti';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 
 interface ReviewSubmissionModalProps {
   isVisible: boolean;
@@ -31,6 +36,23 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ─── Slide-up animation (replaces MotiView from={{ translateY: 300 }} animate={{ translateY: 0 }})
+  const translateY = useSharedValue(300);
+
+  useEffect(() => {
+    if (isVisible) {
+      translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
+    } else {
+      // Reset instantly so next open animates fresh
+      translateY.value = 300;
+    }
+  }, [isVisible]);
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  // ─── Submit handler ────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (rating === 0) {
       setError('Please select a rating');
@@ -62,39 +84,42 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView 
+      {/* NOTE: className removed from KeyboardAvoidingView — use style only */}
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
+        style={{ flex: 1 }}
       >
-        <View className="flex-1 bg-black/50 justify-end">
-          <MotiView
-            from={{ translateY: 300 }}
-            animate={{ translateY: 0 }}
-            className="bg-white rounded-t-[32px] p-6 pb-10"
-          >
-            <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-xl font-bold text-gray-900">Rate {targetName}</Text>
-              <TouchableOpacity onPress={onClose} className="bg-gray-100 p-2 rounded-full">
+        <View style={styles.backdrop}>
+
+          {/* Animated sheet — NO className here, that's what caused the crash */}
+          <Animated.View style={[styles.sheet, sheetStyle]}>
+
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.title}>Rate {targetName}</Text>
+              <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
                 <X size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>
 
-            <View className="items-center mb-8">
-              <Text className="text-gray-500 mb-4 font-medium">How was your experience?</Text>
-              <StarRating 
-                rating={rating} 
+            {/* Star rating */}
+            <View style={styles.ratingContainer}>
+              <Text style={styles.ratingLabel}>How was your experience?</Text>
+              <StarRating
+                rating={rating}
                 onRatingChange={(r) => {
                   setRating(r);
                   setError(null);
-                }} 
-                size={40} 
+                }}
+                size={40}
               />
             </View>
 
-            <View className="mb-6">
-              <Text className="text-sm font-bold text-gray-700 mb-2">Write a review (optional)</Text>
+            {/* Text input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Write a review (optional)</Text>
               <TextInput
-                className="bg-gray-50 rounded-2xl p-4 text-gray-900 h-32 border border-gray-100"
+                style={styles.textInput}
                 placeholder="Share your thoughts about the service, quality, and delivery..."
                 multiline
                 textAlignVertical="top"
@@ -105,31 +130,116 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                 }}
                 maxLength={500}
               />
-              <Text className="text-right text-[10px] text-gray-400 mt-1">
-                {reviewText.length}/500
-              </Text>
+              <Text style={styles.charCount}>{reviewText.length}/500</Text>
             </View>
 
-            {error && (
-              <Text className="text-rose-500 text-center text-sm font-bold mb-4">
-                {error}
-              </Text>
-            )}
+            {/* Validation error */}
+            {error && <Text style={styles.errorText}>{error}</Text>}
 
+            {/* Submit button */}
             <TouchableOpacity
               onPress={handleSubmit}
               disabled={isSubmitting}
-              className={`py-4 rounded-2xl flex-row justify-center items-center ${isSubmitting ? 'bg-gray-300' : 'bg-[#2D6A4F]'}`}
+              style={[styles.submitBtn, isSubmitting && styles.submitBtnDisabled]}
             >
               {isSubmitting ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text className="text-white font-bold text-lg">Submit Review</Text>
+                <Text style={styles.submitBtnText}>Submit Review</Text>
               )}
             </TouchableOpacity>
-          </MotiView>
+
+          </Animated.View>
         </View>
       </KeyboardAvoidingView>
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  // Replaces MotiView className="bg-white rounded-t-[32px] p-6 pb-10"
+  sheet: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  closeBtn: {
+    backgroundColor: '#F3F4F6',
+    padding: 8,
+    borderRadius: 999,
+  },
+  ratingContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  ratingLabel: {
+    color: '#6B7280',
+    marginBottom: 16,
+    fontWeight: '500',
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  textInput: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    padding: 16,
+    color: '#111827',
+    height: 128,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  charCount: {
+    textAlign: 'right',
+    fontSize: 10,
+    color: '#9CA3AF',
+    marginTop: 4,
+  },
+  errorText: {
+    color: '#F43F5E',
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  submitBtn: {
+    paddingVertical: 16,
+    borderRadius: 16,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#2D6A4F',
+  },
+  submitBtnDisabled: {
+    backgroundColor: '#D1D5DB',
+  },
+  submitBtnText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+});

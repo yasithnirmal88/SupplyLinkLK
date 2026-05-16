@@ -8,7 +8,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "postinstall": "node scripts/fix-async-storage.js"
+    "postinstall": "node scripts/fix-android-manifests.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~55.0.11",

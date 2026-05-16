@@ -3,11 +3,11 @@ import { Tabs } from 'expo-router';
 import { 
   Home, 
   Search, 
-  PlusCircle, 
-  MessageSquare, 
-  UserCircle 
+  Plus, 
+  MessageCircle, 
+  User 
 } from 'lucide-react-native';
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
 
 import { COLORS } from '../../constants/Colors';
 import { useAuthStore } from '../../stores/authStore';
@@ -17,9 +17,6 @@ export default function TabLayout() {
   const { verificationStatus } = useAuthStore();
   const [showGuard, setShowGuard] = useState(false);
 
-  // If user is not approved, we want to show the guard modal when they interact 
-  // or simply keep it visible. The requirement says "On any tab press... block navigation".
-  // A cleaner way in Expo Router is to use screen listeners or just wrap the content.
   const isApproved = verificationStatus === 'approved';
 
   return (
@@ -31,24 +28,31 @@ export default function TabLayout() {
           tabBarInactiveTintColor: '#94A3B8',
           tabBarStyle: {
             backgroundColor: '#FFFFFF',
-            borderTopColor: '#F1F5F9',
-            height: 90,
-            paddingBottom: 30,
+            borderTopWidth: 0,
+            height: Platform.OS === 'ios' ? 88 : 70,
+            paddingBottom: Platform.OS === 'ios' ? 30 : 12,
             paddingTop: 12,
-            elevation: 0,
-            shadowOpacity: 0,
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            elevation: 20,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -4 },
+            shadowOpacity: 0.05,
+            shadowRadius: 10,
           },
           tabBarLabelStyle: {
             fontSize: 10,
-            fontWeight: 'bold',
+            fontWeight: '900',
             marginTop: -4,
             textTransform: 'uppercase',
-            letterSpacing: 0.5,
+            letterSpacing: 1,
           },
         }}
         screenListeners={{
           tabPress: (e) => {
-            if (!isApproved) {
+            if (!isApproved && e.target?.includes('post')) {
               e.preventDefault();
               setShowGuard(true);
             }
@@ -58,24 +62,24 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Market',
-            tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+            title: 'Explore',
+            tabBarIcon: ({ color, size }) => <Home size={22} color={color} strokeWidth={2.5} />,
           }}
         />
         <Tabs.Screen
           name="search"
           options={{
             title: 'Search',
-            tabBarIcon: ({ color, size }) => <Search size={size} color={color} />,
+            tabBarIcon: ({ color, size }) => <Search size={22} color={color} strokeWidth={2.5} />,
           }}
         />
         <Tabs.Screen
           name="post"
           options={{
-            title: 'Post Ad',
+            title: '',
             tabBarIcon: ({ color }) => (
-              <View className="bg-primary-green p-3 rounded-2xl -mt-8 shadow-lg shadow-emerald-900/40">
-                <PlusCircle size={28} color="white" />
+              <View className="bg-slate-900 w-14 h-14 rounded-full items-center justify-center -mt-8 shadow-xl shadow-slate-900/30 border-4 border-white">
+                <Plus size={28} color="white" strokeWidth={3} />
               </View>
             ),
           }}
@@ -84,14 +88,14 @@ export default function TabLayout() {
           name="messages"
           options={{
             title: 'Inbox',
-            tabBarIcon: ({ color, size }) => <MessageSquare size={size} color={color} />,
+            tabBarIcon: ({ color, size }) => <MessageCircle size={22} color={color} strokeWidth={2.5} />,
           }}
         />
         <Tabs.Screen
           name="profile"
           options={{
-            title: 'Account',
-            tabBarIcon: ({ color, size }) => <UserCircle size={size} color={color} />,
+            title: 'Profile',
+            tabBarIcon: ({ color, size }) => <User size={22} color={color} strokeWidth={2.5} />,
           }}
         />
       </Tabs>

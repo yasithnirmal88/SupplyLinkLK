@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,15 +6,17 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StatusBar } from 'expo-status-bar';
+import { MotiView, MotiText, AnimatePresence } from 'moti';
+import { ChevronLeft, Phone, ArrowRight } from 'lucide-react-native';
+
 import { useAuthStore } from '../../stores/authStore';
 import { sendOtp, getAuthErrorKey } from '../../services/auth';
-import { auth } from '../../services/firebase';
+import { COLORS } from '../../constants/Colors';
 
 export default function PhoneScreen() {
   const router = useRouter();
@@ -64,171 +66,133 @@ export default function PhoneScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-background"
+      className="flex-1 bg-white"
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <StatusBar style="dark" />
 
-      <View className="flex-1 px-6 pt-16 pb-8 justify-between">
-        {/* Back Button */}
-        <Pressable
-          onPress={() => router.back()}
-          className="self-start mb-8 active:opacity-60"
+      <View className="flex-1 px-8 pt-16 pb-12">
+        {/* Header Navigation */}
+        <MotiView 
+          from={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex-row items-center justify-between mb-12"
         >
-          <View
-            className="flex-row items-center rounded-full px-3 py-2"
-            style={{ backgroundColor: 'rgba(45,106,79,0.08)' }}
+          <Pressable
+            onPress={() => router.back()}
+            className="w-12 h-12 rounded-2xl bg-slate-50 items-center justify-center border border-slate-100 active:scale-90"
           >
-            <Text style={{ fontSize: 18, color: '#2D6A4F' }}>←</Text>
-            <Text className="ml-1 font-semibold" style={{ color: '#2D6A4F', fontSize: 14 }}>
-              {t('common.back')}
+            <ChevronLeft size={24} color={COLORS.textPrimary} />
+          </Pressable>
+          <Text className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
+            Step 1 of 3
+          </Text>
+          <View className="w-12" />
+        </MotiView>
+
+        {/* Content */}
+        <View className="flex-1">
+          <MotiView
+            from={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'timing', duration: 600 }}
+          >
+            <View className="w-16 h-16 bg-emerald-50 rounded-3xl items-center justify-center mb-8">
+              <Phone size={32} color={COLORS.primaryGreen} />
+            </View>
+            
+            <Text className="text-slate-900 text-4xl font-black leading-[1.1] mb-4">
+              Enter your{'\n'}phone number
             </Text>
-          </View>
-        </Pressable>
+            <Text className="text-slate-400 text-lg font-medium leading-6 pr-10">
+              We'll send a verification code to secure your account.
+            </Text>
+          </MotiView>
 
-        {/* Header */}
-        <View>
-          <View
-            className="items-center justify-center rounded-full mb-6 self-start"
-            style={{
-              width: 64,
-              height: 64,
-              backgroundColor: 'rgba(45,106,79,0.1)',
-            }}
+          {/* Input Section */}
+          <MotiView
+            from={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'timing', duration: 600, delay: 200 }}
+            className="mt-12"
           >
-            <Text style={{ fontSize: 30 }}>📱</Text>
-          </View>
-
-          <Text
-            className="text-text-primary font-bold"
-            style={{ fontSize: 28, lineHeight: 36 }}
-          >
-            {t('auth.phoneTitle')}
-          </Text>
-          <Text className="text-text-muted mt-2" style={{ fontSize: 15 }}>
-            {t('auth.phoneDescription')}
-          </Text>
-        </View>
-
-        {/* Phone Input */}
-        <View className="mt-8">
-          <Text
-            className="font-semibold mb-3"
-            style={{ fontSize: 13, color: '#6B7280', letterSpacing: 0.5 }}
-          >
-            {t('auth.phoneNumber').toUpperCase()}
-          </Text>
-
-          <View
-            className="flex-row items-center rounded-2xl overflow-hidden"
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderWidth: 2,
-              borderColor: isFocused
-                ? '#2D6A4F'
-                : authError
-                  ? '#EF4444'
-                  : '#E5E7EB',
-              shadowColor: isFocused ? '#2D6A4F' : 'transparent',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: isFocused ? 0.1 : 0,
-              shadowRadius: 8,
-              elevation: isFocused ? 4 : 0,
-            }}
-          >
-            {/* Country Prefix */}
-            <View
-              className="justify-center items-center px-4 py-4"
-              style={{
-                backgroundColor: 'rgba(45,106,79,0.06)',
-                borderRightWidth: 1,
-                borderRightColor: '#E5E7EB',
-              }}
+            <View 
+              className={`flex-row items-center rounded-3xl bg-slate-50 border-2 transition-all p-2 ${
+                isFocused ? 'border-primary-green bg-white shadow-sm' : 'border-transparent'
+              }`}
             >
-              <Text className="font-semibold" style={{ fontSize: 13, color: '#6B7280' }}>
-                🇱🇰
-              </Text>
-              <Text
-                className="font-bold"
-                style={{ fontSize: 17, color: '#1A1A2E', marginTop: 1 }}
-              >
-                +94
-              </Text>
+              {/* Country Code */}
+              <View className="flex-row items-center px-4 py-3 bg-white rounded-2xl shadow-sm border border-slate-100 mr-2">
+                <Text style={{ fontSize: 20 }}>🇱🇰</Text>
+                <Text className="ml-2 font-black text-slate-900 text-lg">+94</Text>
+              </View>
+
+              {/* Input */}
+              <TextInput
+                className="flex-1 text-2xl font-black text-slate-900 px-4 py-4"
+                placeholder="7X XXX XXXX"
+                placeholderTextColor="#CBD5E1"
+                keyboardType="phone-pad"
+                maxLength={11}
+                value={formatDisplay(phoneNumber)}
+                onChangeText={(text) => {
+                  const digits = text.replace(/\D/g, '');
+                  setPhoneNumber(digits);
+                  if (authError) setAuthError(null);
+                }}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                autoFocus
+              />
             </View>
 
-            {/* Input Field */}
-            <TextInput
-              className="flex-1 px-4 py-5"
-              style={{
-                fontSize: 22,
-                fontWeight: '600',
-                color: '#1A1A2E',
-                letterSpacing: 1,
-              }}
-              placeholder={t('auth.phonePlaceholder')}
-              placeholderTextColor="#D1D5DB"
-              keyboardType="phone-pad"
-              maxLength={11} // 9 digits + 2 spaces
-              value={formatDisplay(phoneNumber)}
-              onChangeText={(text) => {
-                const digits = text.replace(/\D/g, '');
-                setPhoneNumber(digits);
-                if (authError) setAuthError(null);
-              }}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              autoFocus
-            />
-          </View>
-
-          {/* Error Message */}
-          {authError && (
-            <View className="flex-row items-center mt-3">
-              <Text style={{ color: '#EF4444', fontSize: 13 }}>⚠️ {authError}</Text>
-            </View>
-          )}
-
-          {/* Helper Text */}
-          <Text className="text-text-muted mt-3" style={{ fontSize: 13 }}>
-            {t('auth.phoneSubtitle')}
-          </Text>
+            <AnimatePresence>
+              {authError && (
+                <MotiText 
+                  from={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-red-500 font-bold mt-4 ml-2"
+                >
+                  ⚠️ {authError}
+                </MotiText>
+              )}
+            </AnimatePresence>
+          </MotiView>
         </View>
 
-        {/* Spacer */}
-        <View className="flex-1" />
-
-        {/* Send OTP Button */}
-        <Pressable
-          onPress={handleSendOtp}
-          disabled={!isValid || isLoading}
-          className="rounded-2xl py-4 items-center active:opacity-90"
-          style={{
-            backgroundColor: isValid ? '#2D6A4F' : '#D1D5DB',
-            shadowColor: isValid ? '#2D6A4F' : 'transparent',
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: isValid ? 0.25 : 0,
-            shadowRadius: 12,
-            elevation: isValid ? 6 : 0,
-            opacity: isLoading ? 0.8 : 1,
-          }}
+        {/* Footer CTAs */}
+        <MotiView
+          from={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'timing', duration: 600, delay: 400 }}
         >
-          {isLoading ? (
-            <View className="flex-row items-center">
-              <ActivityIndicator color="#FFFFFF" size="small" />
-              <Text className="text-white font-bold ml-2" style={{ fontSize: 17 }}>
-                {t('auth.sending')}
-              </Text>
-            </View>
-          ) : (
-            <Text className="text-white font-bold" style={{ fontSize: 17 }}>
-              {t('auth.sendOtp')}
-            </Text>
-          )}
-        </Pressable>
-        {/* DEV ONLY BYPASS */}
-        <Pressable
-          onPress={async () => {
-            try {
+          <Text className="text-slate-400 text-center mb-8 text-sm px-6">
+            By continuing, you agree to our <Text className="text-slate-900 font-bold">Terms of Service</Text> and <Text className="text-slate-900 font-bold">Privacy Policy</Text>.
+          </Text>
+
+          <Pressable
+            onPress={handleSendOtp}
+            disabled={!isValid || isLoading}
+            className={`rounded-3xl py-6 flex-row items-center justify-center shadow-xl ${
+              isValid ? 'bg-primary-green shadow-primary-green/20' : 'bg-slate-200'
+            }`}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Text className={`font-black text-lg mr-2 ${isValid ? 'text-white' : 'text-slate-400'}`}>
+                  Send Verification Code
+                </Text>
+                <ArrowRight size={20} color={isValid ? 'white' : '#94A3B8'} />
+              </>
+            )}
+          </Pressable>
+
+          {/* Dev Bypass Link */}
+          <Pressable
+            onPress={async () => {
               useAuthStore.getState().setUser({
                 uid: 'dev-bypass-123',
                 phoneNumber: '+94770000000',
@@ -237,16 +201,14 @@ export default function PhoneScreen() {
                 displayName: 'Test Dev User'
               });
               router.replace('/(tabs)');
-            } catch (err: any) {
-              Alert.alert("Dev Bypass Error", err.message);
-            }
-          }}
-          className="rounded-2xl py-4 mt-4 items-center bg-slate-800"
-        >
-          <Text className="text-white font-bold" style={{ fontSize: 15 }}>
-            Bypass Phone & Verification (Dev)
-          </Text>
-        </Pressable>
+            }}
+            className="mt-6 py-2 items-center"
+          >
+            <Text className="text-slate-300 font-bold text-xs uppercase tracking-widest">
+              Dev Bypass Verification
+            </Text>
+          </Pressable>
+        </MotiView>
       </View>
     </KeyboardAvoidingView>
   );

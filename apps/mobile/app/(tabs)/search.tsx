@@ -5,15 +5,17 @@ import {
   TextInput, 
   ScrollView, 
   Pressable, 
-  FlatList 
+  FlatList,
+  Platform
 } from 'react-native';
 import { 
   Search as SearchIcon, 
-  SlidersHorizontal, 
-  MapPin, 
   X,
-  ChevronDown,
-  LayoutGrid
+  LayoutGrid,
+  Filter,
+  History,
+  TrendingUp,
+  ChevronRight
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -24,6 +26,7 @@ import {
   orderBy, 
   onSnapshot 
 } from 'firebase/firestore';
+import { MotiView, AnimatePresence } from 'moti';
 
 import { db } from '../../services/firebase';
 import { useAuthStore } from '../../stores/authStore';
@@ -51,6 +54,7 @@ export default function SearchScreen() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -70,9 +74,8 @@ export default function SearchScreen() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      // Client-side search for simplicity in this prototype
       const filtered = search 
-        ? items.filter(i => ((((i as any).title) || ((i as any).displayName) || ((i as any).businessName)) || '').toLowerCase().includes(search.toLowerCase()))
+        ? items.filter(i => ((((i as any).title) || ((i as any).displayName) || ((i as any).businessName) || ((i as any).category)) || '').toLowerCase().includes(search.toLowerCase()))
         : items
 
       setData(filtered);
@@ -83,54 +86,81 @@ export default function SearchScreen() {
   }, [selectedCategory, search, isSupplier]);
 
   return (
-    <View className="flex-1 bg-slate-50">
+    <View className="flex-1 bg-white">
       <View 
-        className="bg-white px-6 pb-6 pt-10 shadow-sm"
-        style={{ paddingTop: insets.top + 10 }}
+        className="bg-white px-8 pb-4"
+        style={{ paddingTop: insets.top + 20 }}
       >
-        <Text className="text-2xl font-black text-slate-900 mb-6 uppercase tracking-tight">
-          Find produce
-        </Text>
+        <MotiView 
+          from={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex-row justify-between items-center mb-8"
+        >
+          <Text className="text-3xl font-black text-slate-900 uppercase tracking-tight">
+            Explore
+          </Text>
+          <Pressable className="w-10 h-10 bg-slate-50 rounded-xl items-center justify-center border border-slate-100">
+             <Filter size={18} color={COLORS.textPrimary} strokeWidth={2.5} />
+          </Pressable>
+        </MotiView>
 
-        <View className="flex-row items-center bg-slate-100 rounded-2xl border border-slate-200 px-4 py-1">
-          <SearchIcon size={20} color="#94A3B8" />
+        <MotiView 
+          animate={{ 
+            borderColor: isFocused ? COLORS.primaryGreen : '#F1F5F9',
+            backgroundColor: isFocused ? '#FFFFFF' : '#F8FAFC'
+          }}
+          className="flex-row items-center rounded-3xl border-2 px-5 py-1 shadow-sm shadow-slate-200/50"
+        >
+          <SearchIcon size={20} color={isFocused ? COLORS.primaryGreen : "#94A3B8"} strokeWidth={2.5} />
           <TextInput
             placeholder={isSupplier ? "Search for demands..." : "Search for suppliers..."}
-            className="flex-1 h-12 ml-3 font-medium text-slate-900"
+            className="flex-1 h-14 ml-3 font-bold text-slate-900 text-lg"
             value={search}
             onChangeText={setSearch}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
           />
-          {search.length > 0 && (
-            <Pressable onPress={() => setSearch('')}>
-              <X size={18} color="#94A3B8" />
-            </Pressable>
-          )}
-        </View>
+          <AnimatePresence>
+            {search.length > 0 && (
+              <MotiView from={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}>
+                <Pressable onPress={() => setSearch('')} className="bg-slate-200 p-1.5 rounded-full">
+                  <X size={12} color="#64748B" strokeWidth={3} />
+                </Pressable>
+              </MotiView>
+            )}
+          </AnimatePresence>
+        </MotiView>
       </View>
 
-      <View className="py-6">
+      <View className="py-4">
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 24 }}
+          contentContainerStyle={{ paddingHorizontal: 32 }}
         >
-          {CATEGORIES.map((cat) => {
+          {CATEGORIES.map((cat, index) => {
             const isActive = selectedCategory === cat.id;
             return (
-              <Pressable
+              <MotiView
                 key={cat.id}
-                onPress={() => setSelectedCategory(isActive ? 'all' : cat.id)}
-                className={`flex-row items-center px-5 py-3 rounded-2xl mr-3 border transition-all ${
-                  isActive 
-                    ? 'bg-primary-green border-primary-green shadow-md shadow-emerald-900/20' 
-                    : 'bg-white border-slate-100'
-                }`}
+                from={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 100 }}
               >
-                <Text style={{ fontSize: 16 }}>{cat.emoji}</Text>
-                <Text className={`ml-2 font-bold text-sm ${isActive ? 'text-white' : 'text-slate-500'}`}>
-                  {cat.name}
-                </Text>
-              </Pressable>
+                <Pressable
+                  onPress={() => setSelectedCategory(isActive ? 'all' : cat.id)}
+                  className={`flex-row items-center px-6 py-3 rounded-2xl mr-3 border transition-all ${
+                    isActive 
+                      ? 'bg-slate-900 border-slate-900 shadow-xl shadow-slate-900/20' 
+                      : 'bg-white border-slate-100'
+                  }`}
+                >
+                  <Text style={{ fontSize: 18 }}>{cat.emoji}</Text>
+                  <Text className={`ml-2 font-black text-xs uppercase tracking-widest ${isActive ? 'text-white' : 'text-slate-500'}`}>
+                    {cat.name}
+                  </Text>
+                </Pressable>
+              </MotiView>
             );
           })}
         </ScrollView>
@@ -139,33 +169,47 @@ export default function SearchScreen() {
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 120, paddingTop: 10 }}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={() => loading ? <MarketplaceSkeleton /> : (
-          <View className="py-20 items-center justify-center">
-            <LayoutGrid size={48} color="#CBD5E1" />
-            <Text className="text-slate-400 font-bold mt-4 uppercase tracking-widest text-xs">No results found</Text>
-          </View>
+          <MotiView 
+            from={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="py-20 items-center justify-center bg-slate-50 rounded-[40px] border border-slate-100 border-dashed"
+          >
+            <LayoutGrid size={48} color="#CBD5E1" strokeWidth={1.5} />
+            <Text className="text-slate-900 font-black mt-6 text-lg uppercase tracking-tight">No results found</Text>
+            <Text className="text-slate-400 font-medium text-center px-10 mt-2 text-sm">
+              Try adjusting your search or filters to find what you're looking for.
+            </Text>
+          </MotiView>
         )}
-        renderItem={({ item }) => (
-          isSupplier 
-            ? <DemandCard 
-                post={item} 
-                onPress={() => router.push({
-                  pathname: '/offers/submit',
-                  params: { 
-                    postId: item.id, 
-                    title: item.title, 
-                    qtyNeeded: item.quantityNeeded, 
-                    unit: item.unit,
-                    businessName: item.businessName 
-                  }
-                })} 
-              />
-            : <SupplyCard 
-                ad={item} 
-                onPress={() => alert('Viewing Ad Detail soon')} 
-              />
+        renderItem={({ item, index }) => (
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ delay: index * 50 }}
+          >
+            {isSupplier 
+              ? <DemandCard 
+                  post={item} 
+                  onPress={() => router.push({
+                    pathname: '/offers/submit',
+                    params: { 
+                      postId: item.id, 
+                      title: item.title, 
+                      qtyNeeded: item.quantityNeeded, 
+                      unit: item.unit,
+                      businessName: item.businessName 
+                    }
+                  })} 
+                />
+              : <SupplyCard 
+                  ad={item} 
+                  onPress={() => alert('Viewing Ad Detail soon')} 
+                />
+            }
+          </MotiView>
         )}
       />
     </View>

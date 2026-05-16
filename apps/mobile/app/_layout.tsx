@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { I18nextProvider } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, ActivityIndicator } from 'react-native';
@@ -29,6 +29,7 @@ if (SENTRY_DSN && SENTRY_DSN !== 'https://example-dsn@sentry.io/123') {
 function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const segments = useSegments();
+  const rootNavigationState = useRootNavigationState();
   const {
     isAuthenticated,
     isLoading,
@@ -84,7 +85,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || !rootNavigationState?.key) return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const inTabsGroup = segments[0] === '(tabs)';
@@ -103,7 +104,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
         router.replace('/(auth)/splash');
       }
     }
-  }, [isAuthenticated, isReady, segments, role]);
+  }, [isAuthenticated, isReady, segments, role, rootNavigationState?.key]);
 
   if (!isReady || isLoading) {
     return (

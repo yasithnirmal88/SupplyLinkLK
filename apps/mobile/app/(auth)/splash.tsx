@@ -69,7 +69,7 @@ export default function SplashScreen() {
           >
             <MotiView
               animate={{ rotate: ['-5deg', '5deg', '-5deg'] }}
-              transition={{ loop: true, type: 'timing', duration: 4000 }}
+              transition={{ loop: true, type: 'timing', duration: 4000, easing: Easing.linear }}
               className="w-full h-full"
             >
               <Image 

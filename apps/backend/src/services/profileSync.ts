@@ -94,7 +94,12 @@ async function generateUserStats(uid: string, role: 'supplier' | 'business') {
     completedTransactions,
     responseRate,
     averageResponseTime,
-    reliabilityScore: undefined,
+    responseTimeHours: Math.round(averageResponseTime / 60),
+    averageRating: 0,
+    totalReviews: 0,
+    trustScore: 0,
+    reliabilityScore: 0,
+    repeatCustomers: 0,
   };
 }
 

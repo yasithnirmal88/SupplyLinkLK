@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
 import { I18nextProvider } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, ActivityIndicator } from 'react-native';
@@ -21,21 +21,11 @@ if (SENTRY_DSN && SENTRY_DSN !== 'https://example-dsn@sentry.io/123') {
   });
 }
 
-function AuthGate({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const segments = useSegments();
-  const {
-    isAuthenticated,
-    isLoading,
-    setUser,
-    setLoading,
-    loadLanguage,
-    role,
-  } = useAuthStore();
+function AuthSync() {
+  const { setUser, setLoading, loadLanguage } = useAuthStore();
+  const [isReady, setIsReady] = useState(false);
 
   useNotifications();
-
-  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     loadLanguage().then(() => {
@@ -78,30 +68,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  // Use a stable redirection pattern that triggers AFTER auth and segments are available
-  useEffect(() => {
-    if (!isReady || isLoading) return;
-
-    const inAuthGroup = segments[0] === '(auth)';
-    const inTabsGroup = segments[0] === '(tabs)';
-    const inOnboarding = segments[0] === 'onboarding';
-
-    if (isAuthenticated) {
-      if (inAuthGroup || inOnboarding) {
-        if (!role) {
-          router.replace('/(auth)/role');
-        } else {
-          router.replace('/(tabs)');
-        }
-      }
-    } else {
-      if (inTabsGroup || inOnboarding) {
-        router.replace('/(auth)/splash');
-      }
-    }
-  }, [isAuthenticated, isReady, isLoading, segments, role]);
-
-  if (!isReady || isLoading) {
+  if (!isReady) {
     return (
       <View
         className="flex-1 items-center justify-center"
@@ -112,7 +79,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return null;
 }
 
 export default function RootLayout() {
@@ -121,11 +88,10 @@ export default function RootLayout() {
       <I18nextProvider i18n={i18n}>
         <SafeAreaProvider>
           <OfflineBanner />
-          <AuthGate>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-            </Stack>
-          </AuthGate>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+          </Stack>
+          <AuthSync />
         </SafeAreaProvider>
       </I18nextProvider>
     </ErrorBoundary>

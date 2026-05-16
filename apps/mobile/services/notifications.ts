@@ -1,9 +1,8 @@
-import { useEffect, useRef } from 'react';
+ï»¿import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import messaging from '@react-native-firebase/messaging';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { getFirestore, doc, updateDoc } from '@react-native-firebase/firestore';
 import { useAuthStore } from '../stores/authStore';
 
 Notifications.setNotificationHandler({
@@ -24,9 +23,15 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!uid) return;
 
-    registerForPushNotificationsAsync().then(token => {
+    registerForPushNotificationsAsync().then(async token => {
       if (token) {
-        updateDoc(doc(db, 'users', uid), { fcmToken: token });
+        try {
+          const db = getFirestore();
+          await updateDoc(doc(db, 'users', uid), { fcmToken: token });
+          console.log('[Notifications] Token saved to Firestore');
+        } catch (err) {
+          console.error('[Notifications] Failed to save FCM token:', err);
+        }
       }
     });
 
@@ -74,7 +79,7 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
       });
     }
 
-    // Get FCM token directly — no Expo project ID needed
+    // Get FCM token directly
     const token = await messaging().getToken();
     console.log('FCM Token:', token);
     return token;

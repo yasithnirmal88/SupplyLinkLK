@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +18,8 @@ import { ChevronLeft, Phone, ArrowRight } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/authStore';
 import { sendOtp, getAuthErrorKey } from '../../services/auth';
 import { COLORS } from '../../constants/Colors';
+
+const LOGO_IMG = require('../../assets/logo.png');
 
 export default function PhoneScreen() {
   const router = useRouter();
@@ -84,9 +87,9 @@ export default function PhoneScreen() {
           >
             <ChevronLeft size={24} color={COLORS.textPrimary} />
           </Pressable>
-          <Text className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
-            Step 1 of 3
-          </Text>
+          <View className="items-center">
+            <Image source={LOGO_IMG} style={{ width: 100, height: 40 }} resizeMode="contain" />
+          </View>
           <View className="w-12" />
         </MotiView>
 

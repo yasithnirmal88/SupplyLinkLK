@@ -1,11 +1,14 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
+import { Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StatusBar } from 'expo-status-bar';
 import { MotiView, MotiText } from 'moti';
 import { AnimatePresence } from 'moti';
 import { COLORS } from '../../constants/Colors';
+
+const LOGO_IMG = require('../../assets/logo.png');
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -60,14 +63,19 @@ export default function SplashScreen() {
             from={{ opacity: 0, scale: 0.2, rotate: '45deg' }}
             animate={{ opacity: 1, scale: 1, rotate: '0deg' }}
             transition={{ type: 'spring', damping: 12, delay: 200 }}
-            className="w-28 h-28 bg-white/10 rounded-[32px] items-center justify-center border border-white/20"
+            className="w-40 h-40 bg-white rounded-[32px] items-center justify-center border border-white/20 p-4"
             style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20 }}
           >
             <MotiView
               animate={{ rotate: ['-5deg', '5deg', '-5deg'] }}
               transition={{ loop: true, type: 'timing', duration: 4000, easing: (t) => Math.sin(t * Math.PI) }}
+              className="w-full h-full"
             >
-              <Text style={{ fontSize: 60 }}>🌿</Text>
+              <Image 
+                source={LOGO_IMG} 
+                className="w-full h-full" 
+                resizeMode="contain"
+              />
             </MotiView>
           </MotiView>
 

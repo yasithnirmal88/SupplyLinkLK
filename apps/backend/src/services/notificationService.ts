@@ -85,9 +85,6 @@ export async function sendNotification(
             },
             android: {
               priority: 'high',
-              notification: {
-                badgeCount: badgeCount,
-              }
             },
             apns: {
               payload: {

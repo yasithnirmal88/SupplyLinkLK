@@ -1,48 +1,63 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
-const libraries = [
-  {
-    name: '@react-native-async-storage/async-storage',
-    relPath: 'node_modules/@react-native-async-storage/async-storage/android/src/main/AndroidManifest.xml',
-    package: 'package="com.reactnativecommunity.asyncstorage"'
-  },
-  {
-    name: 'react-native-linear-gradient',
-    relPath: 'node_modules/react-native-linear-gradient/android/src/main/AndroidManifest.xml',
-    package: 'package="com.BV.LinearGradient"'
-  },
-  {
-    name: '@react-native-firebase/auth',
-    relPath: 'node_modules/@react-native-firebase/auth/android/src/main/AndroidManifest.xml',
-    package: 'package="io.invertase.firebase.auth"'
-  },
-  {
-    name: '@react-native-firebase/app',
-    relPath: 'node_modules/@react-native-firebase/app/android/src/main/AndroidManifest.xml',
-    package: 'package="io.invertase.firebase.app"'
-  }
+/**
+ * Automatically find and fix AndroidManifest.xml files in node_modules
+ * that still use the deprecated 'package' attribute, which causes errors in AGP 8.0+.
+ */
+
+const searchPaths = [
+  path.resolve(__dirname, '../node_modules'),
+  path.resolve(__dirname, '../../../node_modules')
 ];
 
-libraries.forEach(lib => {
-  // Check local node_modules (apps/mobile/node_modules)
-  let manifestPath = path.resolve(__dirname, '../', lib.relPath);
-  
-  if (!fs.existsSync(manifestPath)) {
-    // Check root node_modules (../../node_modules)
-    manifestPath = path.resolve(__dirname, '../../../', lib.relPath);
-  }
+function fixManifest(manifestPath) {
+  if (!fs.existsSync(manifestPath)) return;
 
-  if (fs.existsSync(manifestPath)) {
+  try {
     let content = fs.readFileSync(manifestPath, 'utf8');
-    if (content.includes(lib.package)) {
-      content = content.replace(lib.package, '');
-      fs.writeFileSync(manifestPath, content);
-      console.log(`Fixed ${lib.name} manifest at: ${manifestPath}`);
-    } else {
-      console.log(`${lib.name} manifest already fixed or different at: ${manifestPath}`);
+    // Regex to match the package attribute in the manifest tag
+    const packageRegex = /\s+package="[^"]+"/;
+    
+    if (packageRegex.test(content)) {
+      const newContent = content.replace(packageRegex, '');
+      fs.writeFileSync(manifestPath, newContent);
+      console.log(`Fixed manifest at: ${manifestPath}`);
     }
-  } else {
-    console.log(`Could not find ${lib.name} manifest in local or root node_modules.`);
+  } catch (err) {
+    console.error(`Error fixing manifest at ${manifestPath}:`, err.message);
   }
-});
+}
+
+function findAndFix() {
+  searchPaths.forEach(searchPath => {
+    if (!fs.existsSync(searchPath)) return;
+    
+    console.log(`Scanning: ${searchPath}`);
+    
+    // Using find command via child_process for speed (assuming Windows/Linux with find/PowerShell)
+    // On Windows, we can use a simpler recursive search if needed, but let's try to be precise.
+    
+    const walk = (dir) => {
+      const files = fs.readdirSync(dir);
+      files.forEach(file => {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+        if (stat.isDirectory()) {
+          // Optimization: only search into relevant folders
+          if (file === 'node_modules' || file.startsWith('.') || file === 'ios') return;
+          walk(filePath);
+        } else if (file === 'AndroidManifest.xml' && filePath.includes('android')) {
+          fixManifest(filePath);
+        }
+      });
+    };
+
+    walk(searchPath);
+  });
+}
+
+console.log('Starting automated AndroidManifest fix...');
+findAndFix();
+console.log('Automated fix complete.');

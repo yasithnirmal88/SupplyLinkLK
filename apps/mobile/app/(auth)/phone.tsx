@@ -97,7 +97,11 @@ export default function PhoneScreen() {
       setConfirmationResult(confirmationResult);
       router.push({ pathname: '/(auth)/otp', params: { phone: fullNumber } });
     } catch (error: any) {
-      console.error('FULL AUTH ERROR:', JSON.stringify(error, null, 2));
+      console.error('FULL AUTH ERROR:', {
+        code: error?.code,
+        message: error?.message,
+        nativeError: error?.nativeErrorMessage,
+      });
       const code = error?.code || '';
       setAuthError(t(getAuthErrorKey(code)));
     } finally {

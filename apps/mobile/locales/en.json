@@ -1,14 +1,14 @@
 {
   "welcome": "Welcome to SupplyLink LK",
   "tagline": "Connect farmers to buyers, directly.",
-  "subtitle": "Sri Lanka's verified agricultural supply chain — post what you grow, find what you need.",
-  "getStarted": "Get Started →",
-  "signIn": "Sign In",
-  "languageNote": "Available in Sinhala · English · Tamil",
   "splash": {
     "tagline1": "Connect farmers to buyers,",
     "tagline2": "directly.",
-    "agricultural": "AGRICULTURAL MARKETPLACE · SRI LANKA"
+    "agricultural": "AGRICULTURAL MARKETPLACE · SRI LANKA",
+    "subtitle": "Sri Lanka's verified agricultural supply chain — post what you grow, find what you need.",
+    "getStarted": "Get Started →",
+    "signIn": "Sign In",
+    "languageNote": "Available in Sinhala · English · Tamil"
   },
   "language": {
     "title": "Choose Your Language",
@@ -222,11 +222,11 @@
     "nicBack": "NIC Back",
     "tapToUpload": "Tap to take photo or upload",
     "securityNote": "All submitted IDs are reviewed by our team within 24 hours. Your data is encrypted and stored securely.",
-    "continue": "Continue →",
+    "continue": "Continue \u2192",
     "step": "Step {{current}} of {{total}}"
   },
   "chat": {
-    "verifiedConnection": "Verified connection — chat unlocked after KYC approval",
+    "verifiedConnection": "Verified connection \u2014 chat unlocked after KYC approval",
     "online": "Online",
     "typeMessage": "Type a message...",
     "send": "Send"

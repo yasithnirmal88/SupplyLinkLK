@@ -112,13 +112,12 @@ export default function PhoneScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: 'white' }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <StatusBar style="dark" />
       <View style={{ flex: 1, paddingHorizontal: 32, paddingTop: 64, paddingBottom: 48 }}>
 
-        <Animated.View style={[headerStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 48 }]}>
+        <Animated.View style={[headerStyle, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }]}>
           <Pressable
             onPress={() => router.back()}
             style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#F1F5F9' }}
@@ -131,7 +130,12 @@ export default function PhoneScreen() {
           <View style={{ width: 48 }} />
         </Animated.View>
 
-        <View style={{ flex: 1 }}>
+        <Animated.ScrollView 
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           <Animated.View style={contentStyle}>
             <View style={{ width: 64, height: 64, backgroundColor: '#ECFDF5', borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
               <Phone size={32} color={COLORS.primaryGreen} />
@@ -179,7 +183,7 @@ export default function PhoneScreen() {
               </Animated.Text>
             )}
           </Animated.View>
-        </View>
+        </Animated.ScrollView>
 
         <Animated.View style={footerStyle}>
           <Pressable

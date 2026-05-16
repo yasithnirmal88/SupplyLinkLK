@@ -1,13 +1,12 @@
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 import { updateProfile } from '../controllers/usersController';
-
 import { rateLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
 // Protect all user routes
-router.use(requireAuth);
+router.use(authMiddleware);
 
 router.patch('/profile', rateLimiter, updateProfile);
 

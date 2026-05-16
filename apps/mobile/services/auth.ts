@@ -1,4 +1,10 @@
-import { getAuth, PhoneAuthProvider } from '@react-native-firebase/auth';
+import { 
+  getAuth, 
+  PhoneAuthProvider, 
+  onAuthStateChanged, 
+  signInWithCredential, 
+  signOut 
+} from '@react-native-firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { COLLECTIONS } from '../constants/Collections';
@@ -53,13 +59,13 @@ export async function updateUserRole(uid: string, role: Role): Promise<void> {
 }
 
 export async function signOutUser(): Promise<void> {
-  await getAuth().signOut();
+  await signOut(getAuth());
 }
 
 export function onAuthChange(
   callback: (user: any | null) => void
 ): () => void {
-  return getAuth().onAuthStateChanged(callback);
+  return onAuthStateChanged(getAuth(), callback);
 }
 
 export function getAuthErrorKey(errorCode: string): string {

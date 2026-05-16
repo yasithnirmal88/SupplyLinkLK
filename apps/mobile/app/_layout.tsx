@@ -26,7 +26,7 @@ if (SENTRY_DSN && SENTRY_DSN !== 'https://example-dsn@sentry.io/123') {
 }
 */
 
-function AuthGate({ children }: { children: React.ReactNode }) {
+function AuthGate() {
   const router = useRouter();
   const segments = useSegments();
   const rootNavigationState = useRootNavigationState();
@@ -117,7 +117,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return null;
 }
 
 export default function RootLayout() {
@@ -126,13 +126,10 @@ export default function RootLayout() {
       <I18nextProvider i18n={i18n}>
         <SafeAreaProvider>
           <OfflineBanner />
-          <AuthGate>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              {/* Note: Groups like (auth), (tabs), (kyc) are handled automatically by Expo Router based on file structure. 
-                  Only define them here if you need specific options or to fix registration order. */}
-            </Stack>
-          </AuthGate>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+          </Stack>
+          <AuthGate />
         </SafeAreaProvider>
       </I18nextProvider>
     </ErrorBoundary>

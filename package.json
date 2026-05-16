@@ -1,0 +1,26 @@
+{
+  "name": "supplylink-lk-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "admin": "npm run dev --workspace=@supplylink/admin",
+    "mobile": "npm run start --workspace=apps/mobile",
+    "backend": "npm run dev --workspace=apps/backend",
+    "mobile:android": "npm run android --workspace=apps/mobile",
+    "mobile:ios": "npm run ios --workspace=apps/mobile"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@types/react": "~19.2.10",
+    "react": "^19.2.0",
+    "react-native": "0.83.6"
+  },
+  "dependencies": {
+    "expo": "~55.0.24",
+    "expo-dev-client": "~55.0.33",
+    "react-dom": "^19.2.0"
+  }
+}

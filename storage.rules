@@ -1,0 +1,54 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      // Note: Storage rules don't have easy access to Firestore data.
+      // Usually, we use custom claims for this.
+      // For now, we'll rely on path-based ownership or specific backend-only paths.
+      return false; // Custom claims needed for true isAdmin()
+    }
+
+    // 1. KYC Documents (Private)
+    match /kyc/{userId}/{allPaths=**} {
+      // Owner can write, but only owner can read.
+      allow read, write: if isOwner(userId);
+    }
+
+    // 2. Profile Photos (Publicly readable)
+    match /profiles/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    // 3. Ad Images (Publicly readable)
+    match /ads/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    // 4. Chat Images
+    match /chats/{chatId}/{allPaths=**} {
+      // Ideally, we'd check if the user is a participant in the Firestore chat document.
+      // But Storage rules cannot easily check Firestore.
+      // A common pattern is to include the chat ID in the path and rely on client-side security 
+      // or signed URLs for production. For now, we'll allow authenticated access 
+      // with a note that this should be hardened with custom claims or Cloud Functions.
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Default Deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

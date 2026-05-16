@@ -1,0 +1,42 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'apps/backend/**'
+      - 'packages/shared-types/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Lint & Build
+        run: |
+          npx turbo run build --filter=@supplylink/backend
+
+      # Placeholder for Docker Build & Push
+      # - name: Build and push Docker image
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: .
+      #     file: apps/backend/Dockerfile
+      #     push: true
+      #     tags: user/supplylink-backend:latest
+
+      # Placeholder for Cloud Deployment (e.g. Google Cloud Run or AWS ECS)
+      # - name: Deploy to Production
+      #   run: |
+      #     echo "Deploying to production server..."

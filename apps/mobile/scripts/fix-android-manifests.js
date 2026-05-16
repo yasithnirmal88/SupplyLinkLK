@@ -11,6 +11,16 @@ const libraries = [
     name: 'react-native-linear-gradient',
     relPath: 'node_modules/react-native-linear-gradient/android/src/main/AndroidManifest.xml',
     package: 'package="com.BV.LinearGradient"'
+  },
+  {
+    name: '@react-native-firebase/auth',
+    relPath: 'node_modules/@react-native-firebase/auth/android/src/main/AndroidManifest.xml',
+    package: 'package="io.invertase.firebase.auth"'
+  },
+  {
+    name: '@react-native-firebase/app',
+    relPath: 'node_modules/@react-native-firebase/app/android/src/main/AndroidManifest.xml',
+    package: 'package="io.invertase.firebase.app"'
   }
 ];
 

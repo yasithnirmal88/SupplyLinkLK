@@ -13,7 +13,7 @@ import ErrorBoundary from '../components/common/ErrorBoundary';
 import "../global.css";
 
 Sentry.init({
-  dsn: 'https://example-dsn@sentry.io/123', // Replace with real DSN
+  dsn: 'https://example-dsn@sentry.io/123',
   debug: false
 });
 
@@ -35,7 +35,6 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   const [isReady, setIsReady] = useState(false);
 
-  // Load saved language on mount
   useEffect(() => {
     loadLanguage().then(() => {
       const lang = useAuthStore.getState().language;
@@ -43,7 +42,6 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  // Listen to Firebase auth state
   useEffect(() => {
     const unsubscribe = onAuthChange(async (firebaseUser) => {
       if (firebaseUser) {
@@ -58,7 +56,6 @@ function AuthGate({ children }: { children: React.ReactNode }) {
               displayName: profile.displayName,
             });
           } else {
-            // Firebase user exists but no Firestore profile yet
             setUser({
               uid: firebaseUser.uid,
               phoneNumber: firebaseUser.phoneNumber || '',
@@ -79,28 +76,23 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  // Navigation guard
   useEffect(() => {
     if (!isReady) return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const inTabsGroup = segments[0] === '(tabs)';
-    const inKycGroup = segments[0] === '(kyc)';
 
-    if (isAuthenticated && (inAuthGroup || segments[0] === 'onboarding')) {
-      // Authenticated user in auth/onboarding screens
+    if (isAuthenticated && inAuthGroup) {
       if (!role) {
         router.replace('/(auth)/role');
-      } else if (segments[0] === '(auth)') {
+      } else {
         router.replace('/(tabs)');
       }
     } else if (!isAuthenticated && (inTabsGroup || segments[0] === 'onboarding')) {
-      // Unauthenticated user in protected screens Ã¢â€ â€™ send to splash
       router.replace('/(auth)/splash');
     }
   }, [isAuthenticated, isReady, segments, role]);
 
-  // Show loading while checking auth
   if (!isReady || isLoading) {
     return (
       <View
@@ -124,8 +116,9 @@ export default function RootLayout() {
           <AuthGate>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" />
-              {/* Removed erroneous auth group screen registration */}
+              <Stack.Screen name="(auth)" />
               <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="(kyc)" />
               <Stack.Screen name="onboarding" />
             </Stack>
           </AuthGate>

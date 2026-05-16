@@ -1,8 +1,14 @@
-import { initializeApp } from 'firebase/app';
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { initializeApp, getApps } from '@react-native-firebase/app';
+import auth from '@react-native-firebase/auth';
+import { initializeApp as initWebApp } from 'firebase/app';
 import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+
+// Native Firebase app (for Auth)
+// Configured automatically via google-services.json
+export { auth };
+
+// Web SDK Firebase app (for Firestore and Storage)
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -12,14 +18,6 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID
 };
 
-const app = initializeApp(firebaseConfig);
-
-// Initialize auth with React Native persistence to ensure state is preserved
-// and to resolve the "Persistence failed" warning.
-export const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
-});
-
-export const db = initializeFirestore(app, {});
-
-export const storage = getStorage(app);
+const webApp = initWebApp(firebaseConfig);
+export const db = initializeFirestore(webApp, {});
+export const storage = getStorage(webApp);

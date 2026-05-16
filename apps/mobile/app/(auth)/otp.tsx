@@ -13,6 +13,7 @@ import Animated, {
 import { ChevronLeft, ShieldCheck, ArrowRight, RefreshCw } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/authStore';
 import { confirmOtpWithResult, verifyIdTokenWithBackend, getAuthErrorKey } from '../../services/auth';
+import { getIdToken } from '@react-native-firebase/auth';
 import { COLORS } from '../../constants/Colors';
 
 const OTP_LENGTH = 6;
@@ -105,7 +106,7 @@ export default function OtpScreen() {
     setAuthError(null);
     try {
       const firebaseUser = await confirmOtpWithResult(confirmationResult, code);
-      const idToken = await firebaseUser.getIdToken();
+      const idToken = await getIdToken(firebaseUser);
 
       try {
         const { isNewUser, user: profile } = await verifyIdTokenWithBackend(idToken, language);

@@ -1,16 +1,31 @@
-import { Redirect } from 'expo-router';
+import { useEffect } from 'react';
+import { useRouter, useRootNavigationState } from 'expo-router';
 import { useAuthStore } from '../stores/authStore';
+import { View, ActivityIndicator } from 'react-native';
 
-/**
- * Root index — redirects to splash (auth) or home (tabs)
- * based on authentication state.
- */
 export default function Index() {
-  const { isAuthenticated, role } = useAuthStore();
+  const { isAuthenticated, role, isLoading } = useAuthStore();
+  const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
 
-  if (isAuthenticated && role) {
-    return <Redirect href="/(tabs)/home" />;
-  }
+  useEffect(() => {
+    // Wait until navigation is ready and auth is not loading
+    if (!rootNavigationState?.key || isLoading) return;
 
-  return <Redirect href="/(auth)/splash" />;
+    if (isAuthenticated) {
+      if (!role) {
+        router.replace('/(auth)/role');
+      } else {
+        router.replace('/(tabs)');
+      }
+    } else {
+      router.replace('/(auth)/splash');
+    }
+  }, [isAuthenticated, role, isLoading, rootNavigationState?.key]);
+
+  return (
+    <View className="flex-1 items-center justify-center bg-white">
+      <ActivityIndicator size="large" color="#2D6A4F" />
+    </View>
+  );
 }

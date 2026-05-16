@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
+import { Slot } from 'expo-router';
 import { I18nextProvider } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, ActivityIndicator } from 'react-native';
@@ -78,9 +78,7 @@ export default function RootLayout() {
       <I18nextProvider i18n={i18n}>
         <SafeAreaProvider>
           <OfflineBanner />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-          </Stack>
+          <Slot />
           <AuthSync />
         </SafeAreaProvider>
       </I18nextProvider>

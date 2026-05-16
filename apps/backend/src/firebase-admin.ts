@@ -28,6 +28,7 @@ if (!admin.apps.length) {
 
   admin.initializeApp({
     credential,
+    projectId: 'supplylinklk-dba66',
   });
 }
 

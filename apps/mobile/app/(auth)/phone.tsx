@@ -97,6 +97,7 @@ export default function PhoneScreen() {
       setConfirmationResult(confirmationResult);
       router.push({ pathname: '/(auth)/otp', params: { phone: fullNumber } });
     } catch (error: any) {
+      console.error('FULL AUTH ERROR:', JSON.stringify(error, null, 2));
       const code = error?.code || '';
       setAuthError(t(getAuthErrorKey(code)));
     } finally {
@@ -176,13 +177,6 @@ export default function PhoneScreen() {
         </View>
 
         <Animated.View style={footerStyle}>
-          <Text style={{ color: '#94A3B8', textAlign: 'center', marginBottom: 32, fontSize: 13, paddingHorizontal: 24 }}>
-            By continuing, you agree to our{' '}
-            <Text style={{ color: '#0F172A', fontWeight: '700' }}>Terms of Service</Text>
-            {' '}and{' '}
-            <Text style={{ color: '#0F172A', fontWeight: '700' }}>Privacy Policy</Text>.
-          </Text>
-
           <Pressable
             onPress={handleSendOtp}
             disabled={!isValid || isLoading}
@@ -205,6 +199,13 @@ export default function PhoneScreen() {
               </>
             )}
           </Pressable>
+
+          <Text style={{ color: '#94A3B8', textAlign: 'center', marginTop: 32, fontSize: 13, paddingHorizontal: 24 }}>
+            By continuing, you agree to our{' '}
+            <Text style={{ color: '#0F172A', fontWeight: '700' }}>Terms of Service</Text>
+            {' '}and{' '}
+            <Text style={{ color: '#0F172A', fontWeight: '700' }}>Privacy Policy</Text>.
+          </Text>
         </Animated.View>
       </View>
     </KeyboardAvoidingView>

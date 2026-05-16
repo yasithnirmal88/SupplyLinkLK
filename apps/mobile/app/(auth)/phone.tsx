@@ -112,7 +112,8 @@ export default function PhoneScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: 'white' }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       <StatusBar style="dark" />
       <View style={{ flex: 1, paddingHorizontal: 32, paddingTop: 64, paddingBottom: 48 }}>

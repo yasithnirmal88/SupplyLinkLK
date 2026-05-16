@@ -15,6 +15,7 @@ import "../global.css";
 // Firebase is initialized via the services/firebase import in services/auth.ts
 // which is imported above.
 
+/*
 const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
 
 if (SENTRY_DSN && SENTRY_DSN !== 'https://example-dsn@sentry.io/123') {
@@ -23,6 +24,7 @@ if (SENTRY_DSN && SENTRY_DSN !== 'https://example-dsn@sentry.io/123') {
     debug: false
   });
 }
+*/
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();

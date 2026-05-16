@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { StatusBar } from 'expo-status-bar';
 import { MotiView, MotiText } from 'moti';
 import { AnimatePresence } from 'moti';
+import { Easing } from 'react-native-reanimated';
 import { COLORS } from '../../constants/Colors';
 
 const LOGO_IMG = require('../../assets/logo.png');
@@ -68,7 +69,7 @@ export default function SplashScreen() {
           >
             <MotiView
               animate={{ rotate: ['-5deg', '5deg', '-5deg'] }}
-              transition={{ loop: true, type: 'timing', duration: 4000, easing: (t) => Math.sin(t * Math.PI) }}
+              transition={{ loop: true, type: 'timing', duration: 4000, easing: Easing.inOut(Easing.sine) }}
               className="w-full h-full"
             >
               <Image 

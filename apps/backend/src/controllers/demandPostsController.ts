@@ -80,7 +80,7 @@ export async function createDemandPost(req: AuthenticatedRequest, res: Response)
     });
 
     // 2. Trigger Matches (Async)
-    notifyMatchesForDemandPost(postRef.id, category, postData.districtPreference, itemName);
+    notifyMatchesForDemandPost(postRef.id, category, postData.district, itemName);
 
     console.log(`[Notification] Demand Post created: ${itemName}. Notifying matching suppliers.`);
 

@@ -1,45 +1,26 @@
 /**
  * services/auth.ts
  *
- * Uses @react-native-firebase/auth namespace API — auth() — which is correct
- * for ALL versions of @react-native-firebase including v22+ / v24.
- *
- * getAuth() / onAuthStateChanged() as standalone imports is the Firebase Web
- * SDK pattern (firebase/auth) and does NOT apply to @react-native-firebase.
- *
- * Firestore uses the Firebase Web SDK (firebase/firestore) via ./firebase
- * because @react-native-firebase/firestore is not in package.json.
+ * Uses @react-native-firebase/auth and @react-native-firebase/firestore.
+ * This ensures the auth token is automatically synchronized with native requests.
  */
 import auth from '@react-native-firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from './firebase';
+import firestore from '@react-native-firebase/firestore';
 import { COLLECTIONS } from '../constants/Collections';
 import { apiClient } from './api';
 import type { User, Role, Language } from '@supplylink/shared-types';
 
 // ─── OTP / Phone Auth ─────────────────────────────────────────────────────────
 
-/**
- * Sends an OTP to the given phone number.
- * Returns a ConfirmationResult with a .confirm(code) method.
- */
 export async function sendOtp(phoneNumber: string) {
   return auth().signInWithPhoneNumber(phoneNumber);
 }
 
-/**
- * Confirms OTP using the ConfirmationResult returned by sendOtp().
- * Use this when you store confirmationResult in component state.
- */
 export async function confirmOtpWithResult(confirmationResult: any, otpCode: string) {
   const userCredential = await confirmationResult.confirm(otpCode);
   return userCredential.user;
 }
 
-/**
- * Confirms OTP using a raw verificationId string.
- * Use this when you rely on verificationId from phone auth callbacks.
- */
 export async function confirmOtp(verificationId: string, otpCode: string) {
   const credential = auth.PhoneAuthProvider.credential(verificationId, otpCode);
   const userCredential = await auth().signInWithCredential(credential);
@@ -58,17 +39,18 @@ export async function verifyIdTokenWithBackend(
   });
 }
 
-// ─── Firestore profile helpers (Firebase Web SDK) ─────────────────────────────
+// ─── Firestore profile helpers (Native SDK) ─────────────────────────────
 
 export async function getUserProfile(uid: string): Promise<User | null> {
-  const docRef  = doc(db, COLLECTIONS.USERS, uid);
-  const docSnap = await getDoc(docRef);
-  return docSnap.exists() ? (docSnap.data() as User) : null;
+  const docSnap = await firestore().collection(COLLECTIONS.USERS).doc(uid).get();
+  return docSnap.exists ? (docSnap.data() as User) : null;
 }
 
 export async function updateUserRole(uid: string, role: Role): Promise<void> {
-  const docRef = doc(db, COLLECTIONS.USERS, uid);
-  await setDoc(docRef, { role, updatedAt: serverTimestamp() }, { merge: true });
+  await firestore().collection(COLLECTIONS.USERS).doc(uid).set({ 
+    role, 
+    updatedAt: firestore.FieldValue.serverTimestamp() 
+  }, { merge: true });
 }
 
 // ─── Auth state ───────────────────────────────────────────────────────────────

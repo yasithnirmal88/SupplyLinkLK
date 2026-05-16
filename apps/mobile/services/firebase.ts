@@ -1,12 +1,11 @@
-import { initializeApp, getApps } from '@react-native-firebase/app';
-import auth from '@react-native-firebase/auth';
+import { getAuth } from '@react-native-firebase/auth';
 import { initializeApp as initWebApp } from 'firebase/app';
 import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Native Firebase app (for Auth)
 // Configured automatically via google-services.json
-export { auth };
+export { getAuth };
 
 // Web SDK Firebase app (for Firestore and Storage)
 const firebaseConfig = {

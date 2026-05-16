@@ -1,4 +1,4 @@
-import auth from '@react-native-firebase/auth';
+import { getAuth, PhoneAuthProvider } from '@react-native-firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { COLLECTIONS } from '../constants/Collections';
@@ -8,7 +8,7 @@ import type { User, Role, Language } from '@supplylink/shared-types';
 // --- Phone Auth ---
 
 export async function sendOtp(phoneNumber: string) {
-  return auth().signInWithPhoneNumber(phoneNumber);
+  return getAuth().signInWithPhoneNumber(phoneNumber);
 }
 
 export async function confirmOtpWithResult(
@@ -23,8 +23,8 @@ export async function confirmOtp(
   verificationId: string,
   otpCode: string
 ) {
-  const credential = auth.PhoneAuthProvider.credential(verificationId, otpCode);
-  const userCredential = await auth().signInWithCredential(credential);
+  const credential = PhoneAuthProvider.credential(verificationId, otpCode);
+  const userCredential = await getAuth().signInWithCredential(credential);
   return userCredential.user;
 }
 
@@ -53,13 +53,13 @@ export async function updateUserRole(uid: string, role: Role): Promise<void> {
 }
 
 export async function signOutUser(): Promise<void> {
-  await auth().signOut();
+  await getAuth().signOut();
 }
 
 export function onAuthChange(
   callback: (user: any | null) => void
 ): () => void {
-  return auth().onAuthStateChanged(callback);
+  return getAuth().onAuthStateChanged(callback);
 }
 
 export function getAuthErrorKey(errorCode: string): string {

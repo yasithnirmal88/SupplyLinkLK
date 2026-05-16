@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, RefreshControl, Pressable } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, query, where, orderBy, onSnapshot } from '@react-native-firebase/firestore';
 import { useTranslation } from 'react-i18next';
 import { StatusBar } from 'expo-status-bar';
 import { Bell, Search, Filter, Zap, ChevronDown, CloudOff, MapPin, TrendingUp } from 'lucide-react-native';
@@ -34,23 +34,28 @@ export default function HomeFeedScreen() {
     const collectionName = isSupplier ? 'demandPosts' : 'supplyAds';
     const statusValue = isSupplier ? 'open' : 'active';
 
-    const unsubscribe = firestore()
-      .collection(collectionName)
-      .where('status', '==', statusValue)
-      .orderBy('createdAt', 'desc')
-      .onSnapshot(
-        snapshot => {
-          const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          setData(items);
-          setLoading(false);
-          setRefreshing(false);
-        },
-        error => {
-          console.error('Firestore Listen Error:', error);
-          setLoading(false);
-          setRefreshing(false);
-        }
-      );
+    const db = getFirestore();
+    const q = query(
+      collection(db, collectionName),
+      where('status', '==', statusValue),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      snapshot => {
+        if (!snapshot) return;
+        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setData(items);
+        setLoading(false);
+        setRefreshing(false);
+      },
+      error => {
+        console.error('Firestore Listen Error:', error);
+        setLoading(false);
+        setRefreshing(false);
+      }
+    );
 
     return () => unsubscribe();
   }, [role, verificationStatus]);

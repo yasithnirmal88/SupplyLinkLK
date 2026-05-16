@@ -3,7 +3,7 @@ import { View, Text, TextInput, ScrollView, Pressable, FlatList } from 'react-na
 import { Search as SearchIcon, X, LayoutGrid, Filter } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, collection, query, where, orderBy, onSnapshot } from '@react-native-firebase/firestore';
 import { useAuthStore } from '../../stores/authStore';
 import { DemandCard } from '../../components/marketplace/DemandCard';
 import { SupplyCard } from '../../components/marketplace/SupplyCard';
@@ -33,18 +33,34 @@ export default function SearchScreen() {
 
   useEffect(() => {
     setLoading(true);
+    const db = getFirestore();
     const collectionName = isSupplier ? 'demandPosts' : 'supplyAds';
+    
     const constraints: any[] = [where('status', '==', isSupplier ? 'open' : 'active')];
-    if (selectedCategory !== 'all') constraints.push(where('category', '==', selectedCategory));
-    let ref: any = firestore().collection(collectionName).where('status', '==', isSupplier ? 'open' : 'active');
-    if (selectedCategory !== 'all') ref = ref.where('category', '==', selectedCategory);
-    ref = ref.orderBy('createdAt', 'desc');
-    const unsubscribe = ref.onSnapshot((snapshot: any) => {
-      const items = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-      const filtered = search ? items.filter((i: any) => ((i.title || i.displayName || i.businessName || i.category) || '').toLowerCase().includes(search.toLowerCase())) : items;
-      setData(filtered);
-      setLoading(false);
-    });
+    if (selectedCategory !== 'all') {
+      constraints.push(where('category', '==', selectedCategory));
+    }
+
+    const q = query(
+      collection(db, collectionName),
+      ...constraints,
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot: any) => {
+        if (!snapshot) return;
+        const items = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+        const filtered = search ? items.filter((i: any) => ((i.title || i.displayName || i.businessName || i.category) || '').toLowerCase().includes(search.toLowerCase())) : items;
+        setData(filtered);
+        setLoading(false);
+      },
+      (error: any) => {
+        console.error('Firestore Search Error:', error);
+        setLoading(false);
+      }
+    );
     return () => unsubscribe();
   }, [selectedCategory, search, isSupplier]);
 

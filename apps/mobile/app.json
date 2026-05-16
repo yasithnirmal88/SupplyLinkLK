@@ -13,14 +13,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "supply.link.lk"
+      "bundleIdentifier": "com.supplylink.lk"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2D6A4F"
       },
-      "package": "supply.link.lk"
+      "package": "com.supplylink.lk"
     },
     "plugins": [
       "expo-router"

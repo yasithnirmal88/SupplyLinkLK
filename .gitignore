@@ -45,3 +45,9 @@ build/
 
 # Old Node Modules
 node_modules_old/
+
+# Visual Studio
+.vs/
+
+# Logs
+error.log

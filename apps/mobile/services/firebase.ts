@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { initializeAuth } from 'firebase/auth';
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 const firebaseConfig = {
@@ -13,9 +14,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize auth without React Native persistence fallback to avoid
-// runtime type mismatches with installed firebase version.
-export const auth = initializeAuth(app);
+// Initialize auth with React Native persistence to ensure state is preserved
+// and to resolve the "Persistence failed" warning.
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+});
 
 export const db = initializeFirestore(app, {});
 

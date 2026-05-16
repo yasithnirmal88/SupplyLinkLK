@@ -12,6 +12,9 @@ import { OfflineBanner } from '../components/common/OfflineBanner';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import "../global.css";
 
+// Firebase is initialized via the services/firebase import in services/auth.ts
+// which is imported above.
+
 Sentry.init({
   dsn: 'https://example-dsn@sentry.io/123',
   debug: false
@@ -26,9 +29,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     setUser,
     setLoading,
     loadLanguage,
-    language,
     role,
-    uid,
   } = useAuthStore();
 
   useNotifications();
@@ -81,15 +82,20 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
     const inAuthGroup = segments[0] === '(auth)';
     const inTabsGroup = segments[0] === '(tabs)';
+    const inOnboarding = segments[0] === 'onboarding';
 
-    if (isAuthenticated && inAuthGroup) {
-      if (!role) {
-        router.replace('/(auth)/role');
-      } else {
-        router.replace('/(tabs)');
+    if (isAuthenticated) {
+      if (inAuthGroup || inOnboarding) {
+        if (!role) {
+          router.replace('/(auth)/role');
+        } else {
+          router.replace('/(tabs)');
+        }
       }
-    } else if (!isAuthenticated && (inTabsGroup || segments[0] === 'onboarding')) {
-      router.replace('/(auth)/splash');
+    } else {
+      if (inTabsGroup || inOnboarding) {
+        router.replace('/(auth)/splash');
+      }
     }
   }, [isAuthenticated, isReady, segments, role]);
 
@@ -116,10 +122,8 @@ export default function RootLayout() {
           <AuthGate>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="(kyc)" />
-              <Stack.Screen name="onboarding" />
+              {/* Note: Groups like (auth), (tabs), (kyc) are handled automatically by Expo Router based on file structure. 
+                  Only define them here if you need specific options or to fix registration order. */}
             </Stack>
           </AuthGate>
         </SafeAreaProvider>

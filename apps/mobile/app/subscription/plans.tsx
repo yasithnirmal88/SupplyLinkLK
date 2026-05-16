@@ -25,7 +25,8 @@ import { COLORS } from '../../constants/Colors';
 export default function SubscriptionPlansScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { role, plan } = useAuthStore();
+  const { role } = useAuthStore();
+  const plan = (useAuthStore.getState() as any).plan as string | undefined;
   
   const [isAnnual, setIsAnnual] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -81,7 +82,7 @@ export default function SubscriptionPlansScreen() {
       
       Alert.alert(
         'Payment Initiated', 
-        `Redirecting to PayHere Secure Gateway for Rs.${response.amount}`,
+        `Redirecting to PayHere Secure Gateway for Rs.${((response as any).amount).toLocaleString()}`,
         [
           { text: 'Simulate Success', onPress: () => router.push('/subscription/success') },
           { text: 'Cancel', style: 'cancel' }

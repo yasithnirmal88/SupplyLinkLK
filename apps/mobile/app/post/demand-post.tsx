@@ -46,12 +46,12 @@ const CATEGORIES = ['Coconuts 🥥', 'Vegetables 🥦', 'Fruits 🍎', 'Rice & G
 
 export default function DemandPostScreen() {
   const router = useRouter();
-  const { district } = useAuthStore();
+  const district = (useAuthStore.getState() as any).district as string | undefined;
   const [loading, setLoading] = useState(false);
   const [showDeadlinePicker, setShowDeadlinePicker] = useState(false);
 
   const { control, handleSubmit, formState: { errors } } = useForm<DemandFormValues>({
-    resolver: zodResolver(demandSchema),
+    resolver: zodResolver(demandSchema) as any,
     defaultValues: {
       category: '',
       itemName: '',
@@ -244,7 +244,7 @@ export default function DemandPostScreen() {
 
       <View className="absolute bottom-6 left-6 right-6">
          <Pressable 
-           onPress={handleSubmit(onSubmit)}
+           onPress={handleSubmit(onSubmit as any)}
            disabled={loading}
            className={`py-4 rounded-2xl items-center flex-row justify-center gap-2 shadow-xl ${loading ? 'bg-slate-400' : 'bg-primary-green shadow-emerald-900/40'}`}
          >

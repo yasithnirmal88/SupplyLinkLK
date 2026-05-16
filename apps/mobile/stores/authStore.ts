@@ -20,6 +20,10 @@ interface AuthState {
   isAuthenticated: boolean;
   isNewUser: boolean;
   language: Language;
+  // Optional profile fields stored in auth state
+  district?: string | null;
+  plan?: string | null;
+  setDisplayName?: (name: string) => void;
 
   // Error
   authError: string | null;
@@ -79,6 +83,8 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
       role: user.role,
       verificationStatus: user.verificationStatus,
       displayName: user.displayName ?? null,
+      // expose display name setter placeholder; implementation may update external services
+      setDisplayName: (name: string) => set({ displayName: name }),
       isAuthenticated: true,
       isLoading: false,
       authError: null,

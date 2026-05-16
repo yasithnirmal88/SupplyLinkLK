@@ -57,7 +57,7 @@ const CATEGORIES = [
 
 export default function SupplyAdScreen() {
   const router = useRouter();
-  const { uid, district, verificationStatus } = useAuthStore();
+  const { uid, verificationStatus, district } = useAuthStore();
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [showFromPicker, setShowFromPicker] = useState(false);
@@ -81,7 +81,7 @@ export default function SupplyAdScreen() {
   if (verificationStatus !== 'approved') {
     return (
       <View className="flex-1 items-center justify-center p-6 bg-slate-50">
-         <X size={48} color={COLORS.red500} />
+         <X size={48} color={COLORS.error} />
          <Text className="text-xl font-bold mt-4 text-center">Verification Required</Text>
       </View>
     );
@@ -109,7 +109,7 @@ export default function SupplyAdScreen() {
     setLoading(true);
     try {
       // Freemium Verification
-      const p = useAuthStore.getState().plan;
+      const p = useAuthStore((s) => s.plan) as string | undefined;
       if (!p || p === 'free') {
         const q = query(collection(db, 'supplyAds'), where('supplierId', '==', uid), where('status', '==', 'active'));
         const snap = await getDocs(q);
@@ -396,7 +396,7 @@ export default function SupplyAdScreen() {
       {/* Floating Submit Button */}
       <View className="absolute bottom-6 left-6 right-6">
          <Pressable 
-           onPress={handleSubmit(onSubmit)}
+      onPress={handleSubmit(onSubmit as any)}
            disabled={loading}
            className={`py-4 rounded-2xl items-center flex-row justify-center gap-2 shadow-xl ${loading ? 'bg-slate-400 shadow-slate-900/10' : 'bg-primary-green shadow-emerald-900/40'}`}
          >

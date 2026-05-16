@@ -2,22 +2,36 @@ import { API_URL } from '../constants/Config';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-interface RequestOptions {
+interface RequestOptions<B = unknown> {
   method?: HttpMethod;
-  body?: unknown;
+  body?: B;
   token?: string;
   headers?: Record<string, string>;
+  // If true, do not attempt to parse JSON (useful for endpoints returning plain text)
+  skipJson?: boolean;
+}
+
+export class ApiError extends Error {
+  public status: number;
+  public body?: any;
+
+  constructor(message: string, status: number, body?: any) {
+    super(message);
+    this.status = status;
+    this.body = body;
+    this.name = 'ApiError';
+  }
 }
 
 /**
  * Base API client for communicating with the Express backend.
- * Automatically attaches Firebase auth token when provided.
+ * Returns a typed response T and accepts an optional request body type B.
  */
-export async function apiClient<T = unknown>(
+export async function apiClient<T = unknown, B = unknown>(
   endpoint: string,
-  options: RequestOptions = {}
+  options: RequestOptions<B> = {}
 ): Promise<T> {
-  const { method = 'GET', body, token, headers = {} } = options;
+  const { method = 'GET', body, token, headers = {}, skipJson = false } = options;
 
   const config: RequestInit = {
     method,
@@ -29,17 +43,30 @@ export async function apiClient<T = unknown>(
   };
 
   if (body && method !== 'GET') {
-    config.body = JSON.stringify(body);
+    config.body = JSON.stringify(body as any);
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, config);
+  const res = await fetch(`${API_URL}${endpoint}`, config);
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    throw new Error(
-      errorBody.error || `API Error: ${response.status} ${response.statusText}`
-    );
+  // No content
+  if (res.status === 204 || skipJson) {
+    // Return undefined as any for void responses
+    return undefined as any as T;
   }
 
-  return response.json() as Promise<T>;
+  const text = await res.text();
+  let data: any = undefined;
+  try {
+    data = text ? JSON.parse(text) : undefined;
+  } catch (e) {
+    // If parsing fails, fall back to raw text
+    data = text;
+  }
+
+  if (!res.ok) {
+    const message = (data && data.error) || `API Error: ${res.status} ${res.statusText}`;
+    throw new ApiError(message, res.status, data);
+  }
+
+  return data as T;
 }

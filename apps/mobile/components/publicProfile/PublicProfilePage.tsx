@@ -136,7 +136,7 @@ export default function PublicProfilePage() {
             </View>
             <View className="flex-1 bg-slate-50 rounded-[1.5rem] p-4">
               <Text className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Avg reply</Text>
-              <Text className="text-xl font-black text-slate-900 mt-2">{profile.stats.averageResponseTime}m</Text>
+              <Text className="text-xl font-black text-slate-900 mt-2">{(profile.stats as any).averageResponseTime}m</Text>
             </View>
           </View>
         </View>

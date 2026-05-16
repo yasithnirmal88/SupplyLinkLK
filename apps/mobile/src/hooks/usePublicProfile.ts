@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, getDocFromCache, getDocFromServer } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { COLLECTIONS } from '../../constants/Collections';
 import type { PublicProfile } from '@supplylink/shared-types';
@@ -12,13 +12,26 @@ async function fetchPublicProfileFromFirestore(
   source: 'cache' | 'default'
 ): Promise<PublicProfile | null> {
   const profileRef = doc(db, COLLECTIONS.PUBLIC_PROFILES, uid);
-  const snapshot = await getDoc(profileRef, { source });
+  try {
+    let snapshot;
+    if (source === 'cache') {
+      snapshot = await getDocFromCache(profileRef);
+    } else if (source === 'default') {
+      // try server first, fallback to cache
+      try {
+        snapshot = await getDocFromServer(profileRef);
+      } catch (e) {
+        snapshot = await getDoc(profileRef);
+      }
+    } else {
+      snapshot = await getDoc(profileRef);
+    }
 
-  if (!snapshot.exists()) {
+    if (!snapshot || !snapshot.exists()) return null;
+    return snapshot.data() as PublicProfile;
+  } catch (err) {
     return null;
   }
-
-  return snapshot.data() as PublicProfile;
 }
 
 async function loadPublicProfile(uid: string): Promise<PublicProfile | null> {

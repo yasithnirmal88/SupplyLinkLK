@@ -13,13 +13,16 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    // Newer SDKs expect these fields as well
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
 export const useNotifications = () => {
   const { uid } = useAuthStore();
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<any>(null);
+  const responseListener = useRef<any>(null);
 
   useEffect(() => {
     if (!uid) return;
@@ -41,8 +44,12 @@ export const useNotifications = () => {
     });
 
     return () => {
-      if (notificationListener.current) Notifications.removeNotificationSubscription(notificationListener.current);
-      if (responseListener.current) Notifications.removeNotificationSubscription(responseListener.current);
+      if (notificationListener.current && (Notifications as any).removeNotificationSubscription) {
+        (Notifications as any).removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current && (Notifications as any).removeNotificationSubscription) {
+        (Notifications as any).removeNotificationSubscription(responseListener.current);
+      }
     };
   }, [uid]);
 };
@@ -61,14 +68,14 @@ async function registerForPushNotificationsAsync() {
   }
 
   if (Device.isDevice) {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
+    const perm: any = await Notifications.getPermissionsAsync();
+    let finalStatus = perm.status ?? (perm.granted ? 'granted' : 'denied');
+
+    if (finalStatus !== 'granted') {
+      const res: any = await Notifications.requestPermissionsAsync();
+      finalStatus = res.status ?? (res.granted ? 'granted' : finalStatus);
     }
-    
+
     if (finalStatus !== 'granted') {
       console.warn('Failed to get push token for push notification!');
       return;

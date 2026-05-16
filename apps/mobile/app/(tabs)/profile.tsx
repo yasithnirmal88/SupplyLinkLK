@@ -35,7 +35,7 @@ import * as Haptics from 'expo-haptics';
 
 import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '../../constants/Colors';
-import { logout } from '../../services/auth';
+import { signOutUser as authLogout } from '../../services/auth';
 import { db } from '../../services/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { uploadImage } from '../../services/storage';
@@ -52,8 +52,12 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (!uid) return;
     const fetchProfile = async () => {
-      const snap = await getDoc(doc(db, 'users', uid));
-      if (snap.exists()) setProfileData(snap.data());
+      try {
+        const snap = await getDoc(doc((db as any), 'users', uid as any));
+        if (snap && typeof snap.exists === 'function' && snap.exists()) setProfileData(snap.data());
+      } catch (e) {
+        console.warn('Failed to fetch profile', e);
+      }
       setLoading(false);
     };
     fetchProfile();
@@ -61,7 +65,7 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    await logout();
+    await authLogout();
     clearStore();
     router.replace('/(auth)/splash');
   };
@@ -78,7 +82,7 @@ export default function ProfileScreen() {
       setUploading(true);
       try {
         const url = await uploadImage(result.assets[0].uri, `profiles/${uid}.jpg`);
-        await updateDoc(doc(db, 'users', uid), { photoUrl: url });
+        await updateDoc(doc(db, 'users', uid as string), { photoUrl: url });
         setProfileData({ ...profileData, photoUrl: url });
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch (e) {

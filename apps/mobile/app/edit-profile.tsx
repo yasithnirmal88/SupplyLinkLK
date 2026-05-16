@@ -48,7 +48,8 @@ export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation();
-  const { uid, role, displayName, setDisplayName } = useAuthStore();
+  const { uid, role, displayName } = useAuthStore();
+  const setDisplayName = useAuthStore((s) => s.setDisplayName);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -151,7 +152,7 @@ export default function EditProfileScreen() {
 
     try {
       if (name !== displayName) {
-        setDisplayName(name.trim());
+        setDisplayName?.(name.trim());
       }
 
       const body: any = {
@@ -188,7 +189,7 @@ export default function EditProfileScreen() {
     } catch (error: any) {
       Alert.alert('Update Failed', error.message || 'Could not update profile');
       if (previousDisplayName) {
-        setDisplayName(previousDisplayName);
+        setDisplayName?.(previousDisplayName);
       }
     } finally {
       setSaving(false);

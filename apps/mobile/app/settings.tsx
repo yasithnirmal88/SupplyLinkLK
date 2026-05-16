@@ -72,7 +72,8 @@ export default function SettingsScreen() {
 
   const changeLanguage = (lang: string) => {
     i18n.changeLanguage(lang);
-    setLanguage(lang);
+    // lang may be a string; cast to expected Language type
+    setLanguage(lang as any);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 

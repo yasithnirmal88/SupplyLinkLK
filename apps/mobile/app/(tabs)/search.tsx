@@ -72,8 +72,8 @@ export default function SearchScreen() {
       
       // Client-side search for simplicity in this prototype
       const filtered = search 
-        ? items.filter(i => (i.title || i.displayName || i.businessName).toLowerCase().includes(search.toLowerCase()))
-        : items;
+        ? items.filter(i => ((((i as any).title) || ((i as any).displayName) || ((i as any).businessName)) || '').toLowerCase().includes(search.toLowerCase()))
+        : items
 
       setData(filtered);
       setLoading(false);

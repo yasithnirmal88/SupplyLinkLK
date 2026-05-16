@@ -133,7 +133,7 @@ export default function ChatRoomScreen() {
       });
 
       const token = await auth.currentUser?.getIdToken();
-      apiClient('/chats/notify-message', {
+      (global as any).apiClient('/chats/notify-message', {
         method: 'POST',
         token,
         body: {
@@ -142,7 +142,7 @@ export default function ChatRoomScreen() {
           senderName: displayName,
           text: imageUrl ? '📷 Sent a photo' : text
         }
-      }).catch(err => console.warn('Push notification queued or failed:', err));
+      }).catch((err: any) => console.warn('Push notification queued or failed:', err));
 
     } catch (e) {
       console.error('Send failed:', e);
@@ -255,7 +255,7 @@ export default function ChatRoomScreen() {
                         text: 'Yes, Delivered', 
                         onPress: async () => {
                            try {
-                              await apiClient(`/reviews/${chatId}/confirm-delivery`, { method: 'PATCH' });
+                              await (global as any).apiClient(`/reviews/${chatId}/confirm-delivery`, { method: 'PATCH' });
                               // status will update via listener
                            } catch (e) {
                               Alert.alert('Error', 'Action failed');

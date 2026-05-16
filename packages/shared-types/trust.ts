@@ -6,7 +6,10 @@ export interface SellerStats {
   totalReviews: number;
   completedTransactions: number;
   responseRate: number; // e.g., 95 for 95%
+  // response time in hours
   responseTimeHours: number;
+  // average response time in minutes (optional)
+  averageResponseTime?: number;
   trustScore: number; // e.g., out of 100
   repeatCustomers: number;
   activeListings: number;

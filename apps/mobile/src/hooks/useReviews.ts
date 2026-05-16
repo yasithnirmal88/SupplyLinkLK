@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '../services/api';
-import { auth } from '../services/firebase';
+import { apiClient } from '../../services/api';
+import { auth } from '../../services/firebase';
 import { useRatingsStore } from '../../stores/ratingsStore';
 
 export function useReviews(uid?: string) {

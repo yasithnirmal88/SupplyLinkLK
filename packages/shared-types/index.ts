@@ -75,6 +75,9 @@ export interface SupplyAd {
   availableFrom: string;
   availableUntil?: string;
   status: 'active' | 'sold' | 'expired' | 'removed';
+  // optional runtime metrics
+  viewCount?: number;
+  offerCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -96,7 +99,8 @@ export interface DemandPost {
   district: string;
   deadline: string;
   offersCount: number;
-  status: 'open' | 'fulfilled' | 'closed' | 'expired';
+  // include 'removed' for soft-deleted posts
+  status: 'open' | 'fulfilled' | 'closed' | 'expired' | 'removed';
   createdAt: string;
   updatedAt: string;
 }

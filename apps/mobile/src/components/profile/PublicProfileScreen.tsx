@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useState, useEffect, memo } from 'react';
 import {
   FlatList,
   View,
@@ -37,14 +37,14 @@ import { COLORS } from '../../../constants/Colors';
 import { COLLECTIONS } from '../../../constants/Collections';
 import { auth, db } from '../../../services/firebase';
 import { apiClient } from '../../../services/api';
-import { useAuthStore } from '../../stores/authStore';
-import { SupplyCard } from '../../components/marketplace/SupplyCard';
-import { DemandCard } from '../../components/marketplace/DemandCard';
+import { useAuthStore } from '../../../stores/authStore';
+import { SupplyCard } from '../../../components/marketplace/SupplyCard';
+import { DemandCard } from '../../../components/marketplace/DemandCard';
 import { useReviews } from '../../hooks/useReviews';
-import { StarRating } from '../../components/reviews/StarRating';
-import { TrustBadge } from '../../components/reviews/TrustBadge';
-import { ReviewsList } from '../../components/reviews/ReviewsList';
-import { ReviewSubmissionModal } from '../../components/reviews/ReviewSubmissionModal';
+import { StarRating } from '../../../components/reviews/StarRating';
+import { TrustBadge } from '../../../components/reviews/TrustBadge';
+import { ReviewsList } from '../../../components/reviews/ReviewsList';
+import { ReviewSubmissionModal } from '../../../components/reviews/ReviewSubmissionModal';
 import { Star } from 'lucide-react-native';
 import { trackEvent } from '../../../services/analytics';
 
@@ -54,7 +54,7 @@ type RouteParams = {
 
 type ListingTab = 'supply' | 'demand';
 
-function SkeletonBlock({ width = '100%', height = 16, style = {} }: { width?: string | number; height?: number; style?: object }) {
+function SkeletonBlock({ width = '100%', height = 16, style = {} }: { width?: string | number; height?: number | string; style?: object }) {
   return (
     <View className="rounded-2xl bg-slate-200/70" style={[{ width, height }, style]} />
   );
@@ -106,7 +106,7 @@ export default function PublicProfileScreen() {
   const shareUrl = useMemo(() => {
     if (!profile) return 'https://supplylink.lk';
     const basePath = profile.role === 'business' ? 'business' : 'seller';
-    const identifier = profile.slug || profile.uid;
+                    const identifier = profile.slug || profile.uid;
     return `https://supplylink.lk/${basePath}/${identifier}`;
   }, [profile]);
 
@@ -231,7 +231,7 @@ export default function PublicProfileScreen() {
     <View className="flex-1 bg-slate-50">
       <FlatList
         data={listings.items}
-        keyExtractor={(item) => item.adId ?? item.postId ?? String(Math.random())}
+        keyExtractor={(item) => (item as any).adId ?? (item as any).postId ?? String(Math.random())}
         renderItem={renderListingItem}
         onEndReached={() => listings.hasMore && listings.loadMore()}
         onEndReachedThreshold={0.4}
@@ -324,8 +324,8 @@ export default function PublicProfileScreen() {
                 <Text className="text-slate-700 text-base leading-7 mb-4">{profile.bio || 'No public bio has been added yet.'}</Text>
 
                 <View className="flex-row flex-wrap gap-3 mb-4">
-                  {(profile.categories?.length ?? 0) > 0 ? (
-                    profile.categories.map((category) => (
+                  {((profile as any).categories ?? []).length > 0 ? (
+                    ((profile as any).categories ?? []).map((category: any) => (
                       <View key={category} className="rounded-full bg-slate-100 px-4 py-2">
                         <Text className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-700">{category}</Text>
                       </View>
@@ -336,8 +336,8 @@ export default function PublicProfileScreen() {
                 </View>
 
                 <View className="flex-row flex-wrap gap-3">
-                  {(profile.languages?.length ?? 0) > 0 ? (
-                    profile.languages.map((language) => (
+                  {(profile.languages ?? []).length > 0 ? (
+                    (profile.languages ?? []).map((language: any) => (
                       <View key={language} className="rounded-full bg-slate-100 px-4 py-2">
                         <Text className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-700">{language}</Text>
                       </View>

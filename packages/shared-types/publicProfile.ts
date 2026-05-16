@@ -17,6 +17,7 @@ export interface PublicProfile {
 
   bio?: string;
   businessName?: string;
+  slug?: string;
   categories?: string[];
   languages?: string[];
 
@@ -30,6 +31,8 @@ export interface PublicProfile {
 
   stats: SellerStats;
   trustBadges?: TrustBadge[];
+  // Allow optional averageResponseTime mapping for backward compatibility
+  avgResponseTimeMinutes?: number;
 
   future?: {
     ratingEnabled?: boolean;

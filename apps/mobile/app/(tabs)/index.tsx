@@ -30,6 +30,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '../../services/firebase';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../stores/authStore';
 import { DemandCard } from '../../components/marketplace/DemandCard';
 import { SupplyCard } from '../../components/marketplace/SupplyCard';
@@ -40,6 +41,7 @@ import type { DemandPost, SupplyAd } from '@supplylink/shared-types';
 export default function HomeFeedScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { role, displayName, verificationStatus } = useAuthStore();
   
   const [loading, setLoading] = useState(true);

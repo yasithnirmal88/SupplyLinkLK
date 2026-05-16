@@ -191,7 +191,7 @@ export default function OtpScreen() {
         setLoading(false);
       }
     },
-    [verificationId, phone, language]
+    [confirmationResult, phone, language]
   );
 
   const handleResend = () => {
@@ -272,7 +272,7 @@ export default function OtpScreen() {
               style={{ transform: [{ scale: boxScales[index] }] }}
             >
               <TextInput
-                ref={(ref) => (inputRefs.current[index] = ref)}
+                ref={(ref) => { inputRefs.current[index] = ref; }}
                 className="text-center rounded-2xl"
                 style={{
                   width: 52,

@@ -9,7 +9,9 @@ module.exports = function (api) {
       [
         "module-resolver",
         {
+          root: ["./"],
           alias: {
+            "@": ".",
             "react-native-worklets/plugin": "react-native-worklets-core/plugin",
           },
         },

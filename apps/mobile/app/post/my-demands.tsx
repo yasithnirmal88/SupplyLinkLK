@@ -126,7 +126,7 @@ export default function MyDemandsScreen() {
                      <View className="flex-row items-center gap-4 mt-2">
                         <View className="flex-row items-center">
                            <Clock size={12} color="#94A3B8" />
-                           <Text className="ml-1 text-[10px] font-bold text-slate-400 uppercase">Deadline: {new Date(item.deadline).toLocaleDateString()}</Text>
+            <Text className="ml-1 text-[10px] font-bold text-slate-400 uppercase">Deadline: {new Date(item.deadline).toLocaleDateString()}</Text>
                         </View>
                         <View className="flex-row items-center">
                            <MessageSquare size={12} color="#94A3B8" />

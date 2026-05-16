@@ -9,6 +9,7 @@ import { onAuthChange, getUserProfile } from '../services/auth';
 import { useNotifications } from '../services/notifications';
 import * as Sentry from '@sentry/react-native';
 import { OfflineBanner } from '../components/common/OfflineBanner';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 import "../global.css";
 
 Sentry.init({
@@ -94,7 +95,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
         router.replace('/(tabs)');
       }
     } else if (!isAuthenticated && (inTabsGroup || segments[0] === 'onboarding')) {
-      // Unauthenticated user in protected screens → send to splash
+      // Unauthenticated user in protected screens Ã¢â€ â€™ send to splash
       router.replace('/(auth)/splash');
     }
   }, [isAuthenticated, isReady, segments, role]);
@@ -123,7 +124,7 @@ export default function RootLayout() {
           <AuthGate>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
+              {/* Removed erroneous auth group screen registration */}
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="onboarding" />
             </Stack>

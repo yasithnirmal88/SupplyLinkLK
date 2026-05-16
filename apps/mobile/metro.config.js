@@ -2,21 +2,33 @@ const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
 const path = require("path");
 
-// Find the project and workspace directories
 const projectRoot = __dirname;
-// This can be replaced with `find-up` or a similar library if needed
 const workspaceRoot = path.resolve(projectRoot, "../..");
 
 const config = getDefaultConfig(projectRoot);
 
-// 1. Watch all files within the monorepo
-config.watchFolders = [workspaceRoot];
-// 2. Let Metro know where to resolve packages and in what order
+// 1. Watch monorepo root
+config.watchFolders = [
+  ...(config.watchFolders || []),
+  workspaceRoot,
+];
+
+// 2. Resolve node_modules from both app and workspace
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(workspaceRoot, "node_modules"),
 ];
-// 3. Force Metro to resolve (sub)dependencies only from the `node_modules` directories
-config.resolver.disableHierarchicalLookup = false;
+
+// 3. Prevent duplicate versions of core packages
+config.resolver.extraNodeModules = {
+  react: path.resolve(workspaceRoot, "node_modules/react"),
+  "react-native": path.resolve(workspaceRoot, "node_modules/react-native"),
+};
+
+// 4. FIX FOR WEB — required for Expo SDK 55
+config.transformer = {
+  ...config.transformer,
+  unstable_allowRequireContext: true,
+};
 
 module.exports = withNativeWind(config, { input: "./global.css" });

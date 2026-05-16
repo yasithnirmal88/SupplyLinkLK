@@ -58,7 +58,7 @@ class ErrorBoundary extends Component<Props, State> {
             </Text>
 
             <Pressable
-              onPress={handleReset}
+              onPress={() => this.handleReset()}
               className="flex-row items-center bg-slate-900 px-8 py-4 rounded-[2rem] shadow-lg shadow-slate-400/20"
             >
               <RotateCcw size={18} color="white" className="mr-2" />

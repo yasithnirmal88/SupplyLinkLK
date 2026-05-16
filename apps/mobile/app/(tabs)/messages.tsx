@@ -54,7 +54,7 @@ export default function MessagesScreen() {
   const renderChatItem = ({ item }: { item: any }) => {
     const isSupplier = item.participants[0] === uid;
     const counterpartName = isSupplier ? item.businessName : item.supplierName;
-    const unreadCount = item.unreadCount?.[uid] || 0;
+    const unreadCount = (item.unreadCount && uid ? (item.unreadCount as any)[uid] : 0) || 0;
 
     return (
       <Pressable 

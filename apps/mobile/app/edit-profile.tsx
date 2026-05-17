@@ -30,7 +30,6 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 
 import { db } from '../services/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import { uploadImage } from '../services/storage';
 import { useAuthStore } from '../stores/authStore';
 import { apiClient } from '../services/api';
@@ -70,8 +69,8 @@ export default function EditProfileScreen() {
 
     const fetchProfile = async () => {
       try {
-        const snap = await getDoc(doc(db, 'users', uid));
-        if (snap.exists()) {
+        const snap = await db.collection('users').doc(uid).get();
+        if (snap.exists) {
           const data = snap.data();
           setProfile(data);
           setName(data.displayName || '');
@@ -204,7 +203,7 @@ export default function EditProfileScreen() {
     );
   }
 
-  const isApproved = profile?.verificationStatus === 'approved';
+  const isApproved = profile?.verificationStatus === true;
 
   return (
     <View className="flex-1 bg-slate-50">

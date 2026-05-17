@@ -25,7 +25,6 @@ import { useAuthStore } from '../stores/authStore';
 import i18n from '../services/i18n';
 import { COLORS } from '../constants/Colors';
 import { db } from '../services/firebase';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -43,9 +42,9 @@ export default function SettingsScreen() {
   React.useEffect(() => {
     if (!uid) return;
     const fetchPrefs = async () => {
-      const snap = await getDoc(doc(db, 'users', uid));
-      if (snap.exists() && snap.data().notificationPreferences) {
-        setPreferences(snap.data().notificationPreferences);
+      const snap = await db.collection('users').doc(uid).get();
+      if (snap.exists && snap.data()?.notificationPreferences) {
+        setPreferences(snap.data()?.notificationPreferences);
       }
       setLoading(false);
     };
@@ -61,7 +60,7 @@ export default function SettingsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     try {
-      await updateDoc(doc(db, 'users', uid), {
+      await db.collection('users').doc(uid).update({
         notificationPreferences: newPrefs,
         updatedAt: new Date().toISOString()
       });

@@ -10,7 +10,6 @@ import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '../../constants/Colors';
 import { signOutUser as authLogout } from '../../services/auth';
 import { db } from '../../services/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { uploadImage } from '../../services/storage';
 
 const ProfileItem = ({ icon: Icon, label, color = "#64748B", onPress, badge }: any) => (
@@ -40,8 +39,8 @@ export default function ProfileScreen() {
     if (!uid) return;
     const fetchProfile = async () => {
       try {
-        const snap = await getDoc(doc(db, 'users', uid as string));
-        if (snap.exists()) setProfileData(snap.data());
+        const snap = await db.collection('users').doc(uid as string).get();
+        if (snap.exists) setProfileData(snap.data());
       } catch (e) { console.warn('Failed to fetch profile', e); }
       setLoading(false);
     };
@@ -61,7 +60,7 @@ export default function ProfileScreen() {
       setUploading(true);
       try {
         const url = await uploadImage(result.assets[0].uri, `profiles/${uid}.jpg`);
-        await updateDoc(doc(db, 'users', uid as string), { photoUrl: url });
+        await db.collection('users').doc(uid as string).update({ photoUrl: url });
         setProfileData({ ...profileData, photoUrl: url });
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch (e) { Alert.alert('Error', 'Failed to upload photo'); }
@@ -72,7 +71,7 @@ export default function ProfileScreen() {
   if (loading) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F8FAFC' }}><ActivityIndicator color={COLORS.primaryGreen} /></View>;
 
   const isSupplier = role === 'supplier';
-  const isApproved = profileData?.verificationStatus === 'approved';
+  const isApproved = profileData?.verificationStatus === true;
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>

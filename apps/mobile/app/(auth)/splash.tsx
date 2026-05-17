@@ -15,7 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { COLORS } from '../../constants/Colors';
 
-const LOGO_IMG = require('../../assets/logo.png');
+const LOGO_IMG = require('../../assets/Logo1.png');
 
 export default function SplashScreen() {
   const router = useRouter();

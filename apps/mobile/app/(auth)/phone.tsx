@@ -23,7 +23,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { sendOtp, getAuthErrorKey } from '../../services/auth';
 import { COLORS } from '../../constants/Colors';
 
-const LOGO_IMG = require('../../assets/logo.png');
+const LOGO_IMG = require('../../assets/Logo1.png');
 
 export default function PhoneScreen() {
   const router = useRouter();

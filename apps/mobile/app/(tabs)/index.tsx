@@ -148,13 +148,6 @@ export default function HomeFeedScreen() {
         )}
       </ScrollView>
 
-      {!loading && (
-        <View style={{ position: 'absolute', bottom: 30, right: 30 }}>
-          <Pressable style={{ width: 64, height: 64, backgroundColor: '#0F172A', borderRadius: 32, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.push(isSupplier ? '/ads/create' : '/demands/create')}>
-            <TrendingUp size={28} color="white" />
-          </Pressable>
-        </View>
-      )}
     </View>
   );
 }

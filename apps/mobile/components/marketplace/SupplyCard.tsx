@@ -58,8 +58,9 @@ export const SupplyCard: React.FC<SupplyCardProps> = ({ ad, onPress }) => {
           </View>
           
           <View className="items-end">
+             <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Unit Price</Text>
              <Text className="text-2xl font-black text-primary-green">Rs.{ad.pricePerUnit}</Text>
-             <Text className="text-[10px] font-bold text-slate-400 uppercase">per {ad.unit}</Text>
+             <Text className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">per {ad.unit}</Text>
           </View>
         </View>
 

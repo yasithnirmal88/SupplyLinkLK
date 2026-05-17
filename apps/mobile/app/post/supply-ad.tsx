@@ -30,7 +30,6 @@ import { apiClient } from '../../services/api';
 import { uploadImage } from '../../services/storage';
 import { COLORS } from '../../constants/Colors';
 import { SubscriptionGuardModal } from '../../components/subscription/SubscriptionGuardModal';
-import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 
 const supplyAdSchema = z.object({
@@ -111,8 +110,10 @@ export default function SupplyAdScreen() {
       // Freemium Verification
       const p = useAuthStore((s) => s.plan) as string | undefined;
       if (!p || p === 'free') {
-        const q = query(collection(db, 'supplyAds'), where('supplierId', '==', uid), where('status', '==', 'active'));
-        const snap = await getDocs(q);
+        const snap = await db.collection('supplyAds')
+          .where('supplierId', '==', uid)
+          .where('status', '==', 'active')
+          .get();
         if (snap.size >= 3) {
            setShowSubscriptionGuard(true);
            setLoading(false);

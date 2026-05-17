@@ -9,15 +9,7 @@ import {
   Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  onSnapshot,
-  doc,
-  updateDoc
-} from 'firebase/firestore';
+
 import { 
   ArrowLeft, 
   PackageSearch, 
@@ -43,17 +35,18 @@ export default function MyAdsScreen() {
   useEffect(() => {
     if (!uid) return;
 
-    const q = query(
-      collection(db, 'supplyAds'),
-      where('supplierId', '==', uid),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items = snapshot.docs.map(d => ({ adId: d.id, ...d.data() } as SupplyAd));
-      setAds(items);
-      setLoading(false);
-    });
+    const unsubscribe = db.collection('supplyAds')
+      .where('supplierId', '==', uid)
+      .orderBy('createdAt', 'desc')
+      .onSnapshot((snapshot) => {
+        if (!snapshot) return;
+        const items = snapshot.docs.map(d => ({ adId: d.id, ...d.data() } as SupplyAd));
+        setAds(items);
+        setLoading(false);
+      }, (error) => {
+        console.error('my-ads listener error:', error);
+        setLoading(false);
+      });
 
     return () => unsubscribe();
   }, [uid]);
@@ -66,7 +59,7 @@ export default function MyAdsScreen() {
         style: 'default',
         onPress: async () => {
           try {
-            await updateDoc(doc(db, 'supplyAds', adId), { status: 'sold' });
+            await db.collection('supplyAds').doc(adId).update({ status: 'sold' });
           } catch (e) {
             Alert.alert('Error', 'Could not update ad status.');
           }
@@ -83,7 +76,7 @@ export default function MyAdsScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
-            await updateDoc(doc(db, 'supplyAds', adId), { status: 'removed' });
+            await db.collection('supplyAds').doc(adId).update({ status: 'removed' });
             // Ideally delete doc if no offers attached, or just 'removed'
           } catch (e) {
             Alert.alert('Error', 'Could not delete ad.');

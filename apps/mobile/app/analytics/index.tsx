@@ -7,13 +7,7 @@ import {
   Dimensions 
 } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  limit 
-} from 'firebase/firestore';
+
 import { 
   TrendingUp, 
   Award, 
@@ -43,8 +37,8 @@ export default function AnalyticsScreen() {
       try {
         if (role === 'supplier') {
           // Fetch Supplier Stats
-          const adsSnap = await getDocs(query(collection(db, 'supplyAds'), where('supplierId', '==', uid)));
-          const offersSnap = await getDocs(query(collection(db, 'offers'), where('supplierId', '==', uid)));
+          const adsSnap = await db.collection('supplyAds').where('supplierId', '==', uid).get();
+          const offersSnap = await db.collection('offers').where('supplierId', '==', uid).get();
           
           const acceptedOffers = offersSnap.docs.filter(d => d.data().status === 'accepted');
           const totalRevenue = acceptedOffers.reduce((sum, d) => sum + (d.data().quantity * d.data().pricePerUnit), 0);
@@ -64,7 +58,7 @@ export default function AnalyticsScreen() {
           ]);
         } else {
           // Fetch Business Stats
-          const demandsSnap = await getDocs(query(collection(db, 'demandPosts'), where('businessId', '==', uid)));
+          const demandsSnap = await db.collection('demandPosts').where('businessId', '==', uid).get();
           const fulfilled = demandsSnap.docs.filter(d => d.data().status === 'filled').length;
           
           setStats({

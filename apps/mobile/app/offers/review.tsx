@@ -9,14 +9,7 @@ import {
   Image
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { 
-  collection, 
-  query, 
-  where, 
-  onSnapshot,
-  doc,
-  getDoc
-} from 'firebase/firestore';
+
 import { 
   ArrowLeft, 
   User, 
@@ -42,21 +35,19 @@ export default function ReviewOffersScreen() {
     if (!postId) return;
 
     // 1. Get Post Details
-    getDoc(doc(db, 'demandPosts', postId as string)).then(snapshot => {
-       setPost(snapshot.data());
+    db.collection('demandPosts').doc(postId as string).get().then(snapshot => {
+       if (snapshot.exists) setPost(snapshot.data());
     });
 
     // 2. Listen to Offers
-    const q = query(
-      collection(db, 'offers'),
-      where('demandPostId', '==', postId)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items = snapshot.docs.map(d => ({ offerId: d.id, ...d.data() }));
-      setOffers(items);
-      setLoading(false);
-    });
+    const unsubscribe = db.collection('offers')
+      .where('demandPostId', '==', postId)
+      .onSnapshot((snapshot) => {
+        if (!snapshot) return;
+        const items = snapshot.docs.map(d => ({ offerId: d.id, ...d.data() }));
+        setOffers(items);
+        setLoading(false);
+      });
 
     return () => unsubscribe();
   }, [postId]);

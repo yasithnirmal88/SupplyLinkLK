@@ -8,15 +8,7 @@ import {
   Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  onSnapshot,
-  doc,
-  updateDoc
-} from 'firebase/firestore';
+
 import { 
   ArrowLeft, 
   Layers, 
@@ -41,17 +33,18 @@ export default function MyDemandsScreen() {
   useEffect(() => {
     if (!uid) return;
 
-    const q = query(
-      collection(db, 'demandPosts'),
-      where('businessId', '==', uid),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items = snapshot.docs.map(d => ({ postId: d.id, ...d.data() } as DemandPost));
-      setPosts(items);
-      setLoading(false);
-    });
+    const unsubscribe = db.collection('demandPosts')
+      .where('businessId', '==', uid)
+      .orderBy('createdAt', 'desc')
+      .onSnapshot((snapshot) => {
+        if (!snapshot) return;
+        const items = snapshot.docs.map(d => ({ postId: d.id, ...d.data() } as DemandPost));
+        setPosts(items);
+        setLoading(false);
+      }, (error) => {
+        console.error('my-demands listener error:', error);
+        setLoading(false);
+      });
 
     return () => unsubscribe();
   }, [uid]);
@@ -63,7 +56,7 @@ export default function MyDemandsScreen() {
         text: 'Close', 
         onPress: async () => {
           try {
-            await updateDoc(doc(db, 'demandPosts', postId), { status: 'closed' });
+            await db.collection('demandPosts').doc(postId).update({ status: 'closed' });
           } catch (e) {
             Alert.alert('Error', 'Action failed');
           }

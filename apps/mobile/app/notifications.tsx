@@ -8,16 +8,7 @@ import {
   RefreshControl
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { 
-  collection, 
-  query, 
-  orderBy, 
-  onSnapshot,
-  doc,
-  updateDoc,
-  writeBatch,
-  getDocs
-} from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import { 
   Bell, 
   CheckCircle2, 
@@ -58,30 +49,28 @@ export default function NotificationsScreen() {
   useEffect(() => {
     if (!uid) return;
 
-    const q = query(
-      collection(db, `notifications/${uid}/items`),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setNotifications(items);
-      setLoading(false);
-      setRefreshing(false);
-    });
+    const unsubscribe = db.collection(`notifications/${uid}/items`)
+      .orderBy('createdAt', 'desc')
+      .onSnapshot((snapshot) => {
+        if (!snapshot) return;
+        const items = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setNotifications(items);
+        setLoading(false);
+        setRefreshing(false);
+      });
 
     return () => unsubscribe();
   }, [uid]);
 
   const handleMarkAllRead = async () => {
     const unread = notifications.filter(n => !n.read);
-    const batch = writeBatch(db);
+    const batch = firestore().batch();
     
     unread.forEach(n => {
-      const ref = doc(db, `notifications/${uid}/items`, n.id);
+      const ref = db.collection(`notifications/${uid}/items`).doc(n.id);
       batch.update(ref, { read: true });
     });
 
@@ -91,7 +80,7 @@ export default function NotificationsScreen() {
   const handlePress = async (item: any) => {
     // 1. Mark as read
     if (!item.read) {
-      await updateDoc(doc(db, `notifications/${uid}/items`, item.id), { read: true });
+      await db.collection(`notifications/${uid}/items`).doc(item.id).update({ read: true });
     }
 
     // 2. Navigate

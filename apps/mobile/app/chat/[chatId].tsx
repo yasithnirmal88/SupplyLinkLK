@@ -12,19 +12,7 @@ import {
   Alert
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { 
-  collection, 
-  query, 
-  orderBy, 
-  onSnapshot, 
-  addDoc,
-  doc,
-  updateDoc,
-  getDoc,
-  Timestamp,
-  increment,
-  writeBatch
-} from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
 import { 
   ArrowLeft, 
@@ -64,39 +52,42 @@ export default function ChatRoomScreen() {
     if (!chatId || !uid) return;
 
     // 1. Fetch Chat Meta
-    const chatRef = doc(db, 'chats', chatId as string);
-    getDoc(chatRef).then(snap => {
-      if (snap.exists()) {
-        const data = snap.data();
+    const chatRef = db.collection('chats').doc(chatId as string);
+    chatRef.get().then(snap => {
+      if (snap.exists) {
+        const data = snap.data() as any;
         setChatData(data);
         
         // Fetch matched offer details
-        getDoc(doc(db, 'offers', data.offerId)).then(oSnap => {
-          if (oSnap.exists()) setOfferData(oSnap.data());
-        });
+        if (data.offerId) {
+          db.collection('offers').doc(data.offerId).get().then(oSnap => {
+            if (oSnap.exists) setOfferData(oSnap.data());
+          });
+        }
       }
     });
 
     // 2. Listen to Messages
-    const q = query(
-      collection(db, `messages/${chatId}/messages`),
-      orderBy('createdAt', 'asc')
-    );
-
-    const unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
-      const items = snapshot.docs.map(doc => ({
-        id: doc.id,
-        pending: doc.metadata.hasPendingWrites,
-        ...doc.data()
-      }));
-      setMessages(items);
-      setLoading(false);
-      
-      // Auto-mark as read (only if online to avoid excessive queueing)
-      if (!snapshot.metadata.fromCache) {
-        updateDoc(chatRef, { [`unreadCount.${uid}`]: 0 });
-      }
-    });
+    const unsubscribe = db.collection(`messages/${chatId}/messages`)
+      .orderBy('createdAt', 'asc')
+      .onSnapshot({ includeMetadataChanges: true }, (snapshot) => {
+        if (!snapshot) return;
+        const items = snapshot.docs.map(doc => ({
+          id: doc.id,
+          pending: doc.metadata.hasPendingWrites,
+          ...doc.data()
+        }));
+        setMessages(items);
+        setLoading(false);
+        
+        // Auto-mark as read (only if online to avoid excessive queueing)
+        if (!snapshot.metadata.fromCache) {
+          chatRef.update({ [`unreadCount.${uid}`]: 0 }).catch(() => {});
+        }
+      }, (error) => {
+        console.warn('Chat listen error', error);
+        setLoading(false);
+      });
 
     return () => unsubscribe();
   }, [chatId, uid]);
@@ -117,19 +108,19 @@ export default function ChatRoomScreen() {
         imageUrl: imageUrl || null,
         type: imageUrl ? 'image' : 'text',
         readBy: [uid],
-        createdAt: Timestamp.now()
+        createdAt: firestore.FieldValue.serverTimestamp()
       };
 
       // Firestore will handle the optimistic UI and offline queueing
-      await addDoc(collection(db, `messages/${chatId}/messages`), msgData);
+      await db.collection(`messages/${chatId}/messages`).add(msgData);
 
       // 3. Trigger Metadata & Push (Only if online/successful)
       // Note: In true offline mode, this part might delay until reconnected.
       const otherUid = chatData.participants.find((id: string) => id !== uid);
-      await updateDoc(doc(db, 'chats', chatId as string), {
+      await db.collection('chats').doc(chatId as string).update({
         lastMessage: imageUrl ? '📷 Photo' : text,
-        lastMessageAt: Timestamp.now(),
-        [`unreadCount.${otherUid}`]: increment(1)
+        lastMessageAt: firestore.FieldValue.serverTimestamp(),
+        [`unreadCount.${otherUid}`]: firestore.FieldValue.increment(1)
       });
 
       const token = await auth.currentUser?.getIdToken();

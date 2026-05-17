@@ -22,7 +22,7 @@ const CATEGORIES = [
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { role } = useAuthStore();
+  const { role, verificationStatus } = useAuthStore();
   const isSupplier = role === 'supplier';
 
   const [search, setSearch] = useState('');
@@ -120,8 +120,22 @@ export default function SearchScreen() {
         renderItem={({ item }) => (
           <View>
             {isSupplier
-              ? <DemandCard post={item} onPress={() => router.push({ pathname: '/offers/submit', params: { postId: item.id, title: item.title, qtyNeeded: item.quantityNeeded, unit: item.unit, businessName: item.businessName } })} />
-              : <SupplyCard ad={item} onPress={() => alert('Viewing Ad Detail soon')} />
+              ? <DemandCard post={item} onPress={() => {
+                  const isApproved = verificationStatus === true || verificationStatus === 'approved' || verificationStatus === 'verified';
+                  if (!isApproved) {
+                    alert('Please complete KYC verification to submit offers.');
+                    return;
+                  }
+                  router.push({ pathname: '/offers/submit', params: { postId: item.id, title: item.title, qtyNeeded: item.quantityNeeded, unit: item.unit, businessName: item.businessName } });
+                }} />
+              : <SupplyCard ad={item} onPress={() => {
+                  const isApproved = verificationStatus === true || verificationStatus === 'approved' || verificationStatus === 'verified';
+                  if (!isApproved) {
+                    alert('Please complete KYC verification to interact with ads.');
+                    return;
+                  }
+                  alert('Viewing Ad Detail soon');
+                }} />
             }
           </View>
         )}

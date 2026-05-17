@@ -27,10 +27,7 @@ export default function HomeFeedScreen() {
   const categories = ['All', 'Vegetables', 'Fruits', 'Grains', 'Equipment', 'Services'];
 
   useEffect(() => {
-    if (verificationStatus !== true && verificationStatus !== 'approved' && verificationStatus !== 'verified') {
-      setLoading(false);
-      return;
-    }
+    // Allow unverified users to see the feed, we will block interaction instead
     const collectionName = isSupplier ? 'demandPosts' : 'supplyAds';
     const statusValue = isSupplier ? 'open' : 'active';
 
@@ -127,8 +124,22 @@ export default function HomeFeedScreen() {
               data.map(item => (
                 <View key={item.id}>
                   {isSupplier
-                    ? <DemandCard post={item} onPress={() => router.push({ pathname: '/offers/submit', params: { postId: item.id, title: item.title, qtyNeeded: item.quantityNeeded, unit: item.unit, businessName: item.businessName } })} />
-                    : <SupplyCard ad={item} onPress={() => alert('Viewing Ad Detail soon')} />
+                    ? <DemandCard post={item} onPress={() => {
+                        const isApproved = verificationStatus === true || verificationStatus === 'approved' || verificationStatus === 'verified';
+                        if (!isApproved) {
+                          alert('Please complete KYC verification to submit offers.');
+                          return;
+                        }
+                        router.push({ pathname: '/offers/submit', params: { postId: item.id, title: item.title, qtyNeeded: item.quantityNeeded, unit: item.unit, businessName: item.businessName } });
+                      }} />
+                    : <SupplyCard ad={item} onPress={() => {
+                        const isApproved = verificationStatus === true || verificationStatus === 'approved' || verificationStatus === 'verified';
+                        if (!isApproved) {
+                          alert('Please complete KYC verification to interact with ads.');
+                          return;
+                        }
+                        alert('Viewing Ad Detail soon');
+                      }} />
                   }
                 </View>
               ))

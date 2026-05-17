@@ -44,7 +44,7 @@ export async function createSupplyAd(req: AuthenticatedRequest, res: Response): 
       return;
     }
 
-    if (userData.verificationStatus !== 'approved') {
+    if (userData.verificationStatus !== 'approved' && userData.verificationStatus !== true) {
       res.status(403).json({ error: 'Forbidden: Supplier must be verified to post ads' });
       return;
     }

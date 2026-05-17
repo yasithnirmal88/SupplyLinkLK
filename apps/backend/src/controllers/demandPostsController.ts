@@ -43,7 +43,7 @@ export async function createDemandPost(req: AuthenticatedRequest, res: Response)
        return;
     }
 
-    if (userData.verificationStatus !== 'approved') {
+    if (userData.verificationStatus !== 'approved' && userData.verificationStatus !== true) {
        res.status(403).json({ error: 'Forbidden: Business must be verified to post demands' });
        return;
     }

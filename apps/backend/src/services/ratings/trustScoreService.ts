@@ -43,7 +43,7 @@ export async function calculateTrustScore(uid: string): Promise<number> {
     const ageScore = Math.min((ageInDays / 365) * 100, 100) * 0.10;
 
     // 5. KYC Verification (10%)
-    const isVerified = userData.verificationStatus === 'approved';
+    const isVerified = userData.verificationStatus === 'approved' || userData.verificationStatus === true;
     const kycScore = (isVerified ? 100 : 0) * 0.10;
 
     const totalScore = Math.round(ratingScore + responseScore + transactionScore + ageScore + kycScore);

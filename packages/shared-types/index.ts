@@ -1,6 +1,6 @@
 // ─── Core Enums ──────────────────────────────────────────────
 export type Role = 'supplier' | 'business' | 'admin';
-export type VerificationState = 'pending' | 'approved' | 'rejected';
+export type VerificationState = 'pending' | 'approved' | 'rejected' | boolean;
 export type Language = 'en' | 'si' | 'ta';
 
 // ─── Users ───────────────────────────────────────────────────

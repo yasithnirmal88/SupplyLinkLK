@@ -120,7 +120,7 @@ export async function updateProfile(req: AuthenticatedRequest, res: Response): P
       'photoUrl',
     ].some((key) => updates[key] !== undefined && updates[key] !== existingUser[key]);
 
-    if (shouldTriggerVerification && existingUser.verificationStatus === 'approved') {
+    if (shouldTriggerVerification && (existingUser.verificationStatus === 'approved' || existingUser.verificationStatus === true)) {
       updates.verificationStatus = 'pending';
       updates.verificationReviewRequestedAt = new Date().toISOString();
     }
@@ -133,7 +133,7 @@ export async function updateProfile(req: AuthenticatedRequest, res: Response): P
     res.status(200).json({
       message: 'Profile updated successfully',
       updates,
-      verificationTriggered: shouldTriggerVerification && existingUser.verificationStatus === 'approved',
+      verificationTriggered: shouldTriggerVerification && (existingUser.verificationStatus === 'approved' || existingUser.verificationStatus === true),
     });
   } catch (error: any) {
     console.error('Error updating profile:', error);

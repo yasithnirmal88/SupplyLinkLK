@@ -35,7 +35,7 @@ export async function updateSellerMetrics(uid: string, newRating: number): Promi
     // 3. Evaluate Badges
     const badges: string[] = [];
     
-    if (userData.verificationStatus === 'approved') {
+    if (userData.verificationStatus === 'approved' || userData.verificationStatus === true) {
       badges.push('KYC Verified');
     }
     

@@ -52,7 +52,7 @@ async function buildPublicProfileFromUser(
     categories,
     languages,
     verified: {
-      kyc: userData.verificationStatus === 'approved',
+      kyc: userData.verificationStatus === 'approved' || userData.verificationStatus === true,
       business: role === 'business' && businessDoc?.exists === true,
       phone: Boolean(userData.phoneNumber),
     },

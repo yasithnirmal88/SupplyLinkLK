@@ -23,8 +23,8 @@ export async function createOffer(req: AuthenticatedRequest, res: Response): Pro
     const userDoc = await adminDb.collection(COLLECTIONS.USERS).doc(uid).get();
     const userData = userDoc.data()!;
 
-    if (userData.role !== 'supplier' || userData.verificationStatus !== 'approved') {
-       res.status(403).json({ error: 'Only verified suppliers can submit offers' });
+    if (userData.role !== 'supplier' || (userData.verificationStatus !== 'approved' && userData.verificationStatus !== true)) {
+       res.status(403).json({ error: 'Forbidden: Only verified suppliers can submit offers' });
        return;
     }
 

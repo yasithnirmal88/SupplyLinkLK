@@ -203,7 +203,7 @@ export default function EditProfileScreen() {
     );
   }
 
-  const isApproved = profile?.verificationStatus === true;
+  const isApproved = profile?.verificationStatus === true || profile?.verificationStatus === 'approved' || profile?.verificationStatus === 'verified';
 
   return (
     <View className="flex-1 bg-slate-50">

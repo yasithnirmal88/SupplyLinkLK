@@ -78,7 +78,7 @@ export default function SupplyAdScreen() {
     }
   });
 
-  if (verificationStatus !== 'approved') {
+  if (verificationStatus !== true && verificationStatus !== 'approved' && verificationStatus !== 'verified') {
     return (
       <View className="flex-1 items-center justify-center p-6 bg-slate-50">
          <X size={48} color={COLORS.error} />

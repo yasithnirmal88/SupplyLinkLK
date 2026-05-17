@@ -17,7 +17,7 @@ export default function TabLayout() {
   const { verificationStatus } = useAuthStore();
   const [showGuard, setShowGuard] = useState(false);
 
-  const isApproved = verificationStatus === 'approved';
+  const isApproved = verificationStatus === true || verificationStatus === 'verified' || verificationStatus === 'approved';
 
   return (
     <>

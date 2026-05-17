@@ -27,7 +27,7 @@ export default function HomeFeedScreen() {
   const categories = ['All', 'Vegetables', 'Fruits', 'Grains', 'Equipment', 'Services'];
 
   useEffect(() => {
-    if (!verificationStatus || (verificationStatus !== 'approved' && verificationStatus !== 'verified')) {
+    if (verificationStatus !== true && verificationStatus !== 'approved' && verificationStatus !== 'verified') {
       setLoading(false);
       return;
     }
@@ -118,7 +118,7 @@ export default function HomeFeedScreen() {
                 <Zap size={48} color={COLORS.primaryGreen} opacity={0.2} />
                 <Text style={{ color: '#0F172A', fontWeight: '900', marginTop: 24, fontSize: 17, textTransform: 'uppercase' }}>Nothing here yet</Text>
                 <Text style={{ color: '#94A3B8', fontWeight: '500', textAlign: 'center', paddingHorizontal: 40, marginTop: 8, fontSize: 13, lineHeight: 20 }}>
-                  {verificationStatus !== 'approved' && verificationStatus !== 'verified'
+                  {(verificationStatus !== true && verificationStatus !== 'approved' && verificationStatus !== 'verified')
                     ? 'Complete KYC verification to access the marketplace.'
                     : 'Check back later for new opportunities in your area.'}
                 </Text>

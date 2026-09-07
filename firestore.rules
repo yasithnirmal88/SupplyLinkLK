@@ -2,64 +2,192 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users can read/write their own profile
+    // Helper: is the caller authenticated?
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    // Privileged fields (role, verificationStatus, stats, trust/kyc markers) are
+    // written exclusively by the Admin SDK via backend controllers/services.
+    function isSafeUserUpdate() {
+      return request.resource.data.diff(request.resource.data.before()).affectedKeys()
+          .hasOnly(['displayName', 'avatarUrl', 'bio', 'district', 'language', 'fcmToken', 'notificationPreferences', 'location']))
+        && request.resource.data.role == request.resource.data.before().role
+        && request.resource.data.verificationStatus == request.resource.data.before().verificationStatus;
+    }
+
+    // Users can read their own profile; updates are restricted to safe profile fields.
+
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read: if isAuthed() && request.auth.uid == uid;
+      allow create: if false;
+      allow update: if isAuthed() && request.auth.uid == uid && isSafeUserUpdate();
+      allow delete: if false;
     }
 
-    // Public profiles readable by all authenticated users
+    // Public profiles readable by all authenticated users; writes restricted to safe fields.
+
+
+
     match /publicProfiles/{uid} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow read: if isAuthed();
+      allow create, update: if isAuthed() && request.auth.uid == uid &&
+        request.resource.data.diff(request.resource.data.before()).affectedKeys().hasOnly(['displayName', 'avatarUrl', 'bio', 'district', 'categories', 'slug', 'stats']);
+      allow delete: if false;
     }
 
-    // Suppliers readable by all authenticated users
+    // Suppliers readable by all authenticated users; owner-managed via server-side flows.
+
+
+
     match /suppliers/{uid} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow read: if isAuthed();
+      allow create, update: if isAuthed() && request.auth.uid == uid;
+      allow delete: if false;
     }
 
-    // Businesses readable by all authenticated users
+    // Businesses readable by all authenticated users; owner-managed via server-side flows.
+
+
+
     match /businesses/{uid} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow read: if isAuthed();
+      allow create, update: if isAuthed() && request.auth.uid == uid;
+      allow delete: if false;
     }
 
-    // Supply ads — anyone authenticated can read, owner can write
+    // Supply ads - anyone authenticated can read, owner can write.
+
+
+
     match /supplyAds/{adId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow read: if isAuthed();
+      allow create: if isAuthed() && request.auth.uid == resource.data.supplierId;
+      allow update, delete: if isAuthed() && request.auth.uid == resource.data.supplierId;
     }
 
-    // Demand posts — anyone authenticated can read, owner can write
+    // Demand posts - anyone authenticated can read, owner can write.
+
+
+
     match /demandPosts/{postId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow read: if isAuthed();
+      allow create: if isAuthed() && request.auth.uid == resource.data.businessId;
+      allow update, delete: if isAuthed() && request.auth.uid == resource.data.businessId;
     }
 
-    // Chats — only participants can read/write
+    // Offers - anyone authenticated can read, owner can write.
+
+
+
+    match /offers/{offerId} {
+      allow read: if isAuthed();
+      allow create: if isAuthed() && request.auth.uid == resource.data.supplierId;
+      allow update, delete: if isAuthed() && request.auth.uid == resource.data.supplierId;
+    }
+
+    // Chats - only participants can read/write message threads.
+
+
+
     match /chats/{chatId} {
-      allow read, write: if request.auth != null &&
-        request.auth.uid in resource.data.participantIds;
+      allow read: if isAuthed() &&
+        request.auth.uid in resource.data.participants; // field name must stay in sync with chatsController (participants.
+
+      allow create: if isAuthed();
+      allow update, delete: if isAuthed() && request.auth.uid in resource.data.participants;
+
+
+
 
       match /messages/{messageId} {
-        allow read, write: if request.auth != null &&
-          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds;
+        allow read, write: if isAuthed() &&
+          request.auth.uid in get(/databases/{database}/documents/chats/{chatId}).data.participants;
+
+
+
+
       }
     }
 
-    // Reviews — authenticated users can read, verified users can write
+    // Reviews - authenticated users can read, users can create; owner can update/delete.
+
+
+
     match /reviews/{reviewId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.reviewerId;
+      allow read: if isAuthed();
+      allow create: if isAuthed() && request.auth.uid == resource.data.reviewerId;
+      allow update, delete: if isAuthed() && request.auth.uid == resource.data.reviewerId;
+
+
+
     }
 
-    // Notifications — user's own only
+    // Ratings - authenticated users can read; writes server-managed / owner-only.
+
+
+
+    match /ratings/{ratingId} {
+      allow read: if isAuthed();
+      allow create, update: if isAuthed() && request.auth.uid == resource.data.raterId;
+
+      allow delete: if false;
+    }
+
+    // Reported reviews - clients cannot read/write; server-only.
+
+
+
+    match /reportedReviews/{reportId} {
+      allow read, write: if false;
+    }
+
+    // Notifications - user's own only.
+
+
+
     match /notifications/{uid}/items/{notifId} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if isAuthed() && request.auth.uid == uid;
+
+
+    }
+
+    // Subscriptions - owner materials; server-validated else deny.
+
+
+
+    match /subscriptions/{uid}/items/{subId} {
+      allow read, write: if isAuthed() && request.auth.uid == uid;
+
+
+    }
+
+    // Admin queue - server-only (Admin SDK bypasses rules; client reads/writes denied.)
+
+
+
+    match /adminQueue/{queueId} {
+      allow read, write: if false;
+
+
+    }
+
+    // Favorites / Followers - owner only.
+
+
+
+    match /favorites/{uid}/items/{favId} {
+      allow read, write: if isAuthed() && request.auth.uid == uid;
+
+
+    }
+
+    match /followers/{uid}/items/{followerId} {
+      allow read, write: if isAuthed() && request.auth.uid == uid;
+
+
     }
   }
 }
+
+

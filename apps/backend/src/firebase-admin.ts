@@ -36,3 +36,4 @@ export const adminDb = admin.firestore();
 export const adminAuth = admin.auth();
 export const adminStorage = admin.storage();
 export const adminMessaging = admin.messaging();
+export const FieldValue = admin.firestore.FieldValue;

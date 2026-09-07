@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
-import { adminDb } from '../firebase-admin';
+import { adminAuth, adminDb, FieldValue } from '../firebase-admin';
 import { COLLECTIONS } from '../constants/collections';
 import { sendNotification } from '../services/notificationService';
+import { AuthenticatedRequest } from '../middleware/auth';
 
 export async function getQueue(req: Request, res: Response): Promise<void> {
   try {
@@ -28,9 +29,10 @@ export async function getQueue(req: Request, res: Response): Promise<void> {
   }
 }
 
-export async function approveKyc(req: Request, res: Response): Promise<void> {
+export async function approveKyc(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     const { queueId } = req.params;
+    const reviewerUid = req.uid;
 
     const queueRef = adminDb.collection('adminQueue').doc(queueId);
     const doc = await queueRef.get();
@@ -40,7 +42,7 @@ export async function approveKyc(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const { uid } = doc.data()!;
+    const { uid, type } = doc.data()!;
     const now = new Date().toISOString();
     const batch = adminDb.batch();
 
@@ -48,16 +50,38 @@ export async function approveKyc(req: Request, res: Response): Promise<void> {
     batch.update(queueRef, {
       status: 'approved',
       reviewedAt: now,
+      reviewedBy: reviewerUid || null,
     });
 
     // 2. Update user status
     const userRef = adminDb.collection(COLLECTIONS.USERS).doc(uid);
     batch.update(userRef, {
       verificationStatus: 'approved',
+      role: type === 'business_kyc' ? 'business' : 'supplier',
       updatedAt: now,
     });
 
     await batch.commit();
+
+    // 2b. Mint authoritative custom claims so authorization no longer
+    // depends on user-writable Firestore documents. Server-side claims cannot be
+    // forged by users writing their own Firestore docs; changes propagate within ~1h
+    // or on next forced token refresh.
+
+    // Minting claims is the authorization boundary. If it fails the user could
+    // hold approved role in Firestore while auth claims are stale/missing.
+    // Return 500 so the operator can retry (approval is idempotent: re-running
+    // sets the same values).
+    try {
+      await adminAuth.setCustomUserClaims(uid, {
+        role: type === 'business_kyc' ? 'business' : 'supplier',
+        verified: true,
+      });
+    } catch (claimError) {
+      console.error('Failed to mint claims after KYC approval, queue', queueId, claimError);
+      res.status(500).json({ error: 'KYC approved but claim minting failed; please retry' });
+      return;
+    }
 
     // 3. Send FCM + In-App Notification
     await sendNotification(uid, {
@@ -76,9 +100,10 @@ export async function approveKyc(req: Request, res: Response): Promise<void> {
   }
 }
 
-export async function rejectKyc(req: Request, res: Response): Promise<void> {
+export async function rejectKyc(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     const { queueId } = req.params;
+    const reviewerUid = req.uid;
     const { reason, internalNotes } = req.body;
 
     if (!reason) {
@@ -104,16 +129,31 @@ export async function rejectKyc(req: Request, res: Response): Promise<void> {
       rejectionReason: reason,
       internalNotes: internalNotes || null,
       reviewedAt: now,
+      reviewedBy: reviewerUid || null,
     });
 
     // 2. Update user status
     const userRef = adminDb.collection(COLLECTIONS.USERS).doc(uid);
     batch.update(userRef, {
       verificationStatus: 'rejected',
+      role: FieldValue.delete(),
       updatedAt: now,
     });
 
     await batch.commit();
+
+    // 2b. Clear any previously minted custom claims - a rejected user
+    // must not remain verified or hold supplier/business/admin claims.
+    // Clearing claims is the authorization boundary. If it fails the rejected user
+    // could keep verified/supplier claims in their token. Return 500 so the
+    // operator can retry (rejection is idempotent).
+    try {
+      await adminAuth.setCustomUserClaims(uid, {});
+    } catch (claimError) {
+      console.error('Failed to clear claims after KYC rejection, queue', queueId, claimError);
+      res.status(500).json({ error: 'KYC rejected but claim clearing failed; please retry' });
+      return;
+    }
 
     // 3. Send FCM + In-App Notification
     await sendNotification(uid, {

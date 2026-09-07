@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
-import { adminAuth, adminDb } from '../firebase-admin';
+import { adminAuth, adminDb, FieldValue } from '../firebase-admin';
 import { COLLECTIONS } from '../constants/collections';
+import { AuthenticatedRequest } from '../middleware/auth';
 
 /**
  * POST /api/v1/auth/verify-token
@@ -77,5 +78,66 @@ export async function verifyToken(req: Request, res: Response): Promise<void> {
     } else {
       res.status(500).json({ error: 'Internal server error' });
     }
+  }
+}
+
+/**
+ * PATCH /api/v1/auth/role
+ *
+ * Self-service role assignment used during onboarding.
+ *
+ * Only safe self-selected roles are accepted (buyer, supplier, business).
+ * The role is stored on the Firestore user doc,which is read by the mobile app
+ * for UI purposes. Privilege-bearing claims (role=admin etc.) are minted
+ * exclusively by the Admin SDK (KYC approval / admin provisioning), never here,
+ * so this endpoint cannot escalate privileges..
+ *
+ * Existing backend-assigned roles are preserved: once a user has a
+ * non-buyer role (supplier/business), they may not switch it away here —
+ * that transition is gated by KYC reject/admin action server-side.
+ */
+export async function updateRole(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const { uid } = req;
+    if (!uid) {
+      res.status(401).json({ error: 'Unauthenticated' });
+      return;
+    }
+
+    const { role } = req.body;
+    const ALLOWED_ROLES = ['buyer', 'supplier', 'business'];
+    if (typeof role !== 'string' || !ALLOWED_ROLES.includes(role)) {
+      res.status(400).json({ error: 'Invalid role. Allowed: buyer, supplier, business' });
+      return;
+    }
+
+    const userRef = adminDb.collection(COLLECTIONS.USERS).doc(uid);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      res.status(404).json({ error: 'User profile not found' });
+      return;
+    }
+
+    const currentRole = userDoc.data()?.role ?? null;
+    if (
+      currentRole &&
+      currentRole !== role &&
+      currentRole !== 'buyer'
+    ) {
+      res.status(409).json({
+        error: 'Role is already finalized; contact support to change it',
+      });
+      return;
+    }
+
+    await userRef.update({
+      role,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    res.status(200).json({ ok: true });
+  } catch (error: any) {
+    console.error('Role update failed:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

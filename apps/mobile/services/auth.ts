@@ -47,10 +47,11 @@ export async function getUserProfile(uid: string): Promise<User | null> {
 }
 
 export async function updateUserRole(uid: string, role: Role): Promise<void> {
-  await firestore().collection(COLLECTIONS.USERS).doc(uid).set({ 
-    role, 
-    updatedAt: firestore.FieldValue.serverTimestamp() 
-  }, { merge: true });
+  // Role is assigned server-side so clients cannot self-promote (e.g. role=admin.
+  await apiClient('/auth/role', {
+    method: 'PATCH',
+    body: { role },
+  });
 }
 
 // ─── Auth state ───────────────────────────────────────────────────────────────
@@ -76,3 +77,4 @@ export function getAuthErrorKey(errorCode: string): string {
     default:                               return 'common.error';
   }
 }
+

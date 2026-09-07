@@ -3,8 +3,7 @@
  * Validates Profile, Ratings, Trust Score, and Security Logic.
  */
 import { validateProfileUpdate } from '../validators/profileValidator';
-import { calculateTrustScore } from '../services/trustScoreService';
-import { filterProfanity } from '../utils/profanityFilter'; // Assuming this exists or using a dummy
+import { calculateTrustScore } from '../services/ratings/trustScoreService';
 
 console.log('🚀 Starting Full System Integration Test...\n');
 
@@ -45,8 +44,8 @@ async function runTests() {
     accountAgeDays: 365,
     isKycVerified: true
   };
-  const score1 = calculateTrustScore(highTrustUser);
-  console.log(`✅ High trust score: ${score1.score}/100 (Level: ${score1.level})`);
+  const score1 = await calculateTrustScore('test_high_trust_user');
+  console.log(`✅ High trust score: ${score1}/100`);
 
   const lowTrustUser = {
     averageRating: 2.1,
@@ -56,8 +55,8 @@ async function runTests() {
     accountAgeDays: 5,
     isKycVerified: false
   };
-  const score2 = calculateTrustScore(lowTrustUser);
-  console.log(`✅ Low trust score: ${score2.score}/100 (Level: ${score2.level})`);
+  const score2 = await calculateTrustScore('test_low_trust_user');
+  console.log(`✅ Low trust score: ${score2}/100`);
 
   // 3. Slugs & Sharing
   console.log('\n--- Phase 3: Slugs & Sharing ---');

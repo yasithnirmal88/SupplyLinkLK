@@ -1,10 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from './auth';
-import { adminDb } from '../firebase-admin';
+import { adminAuth, adminDb } from '../firebase-admin';
 import { COLLECTIONS } from '../constants/collections';
 
 /**
- * Middleware to verify if the user has an 'admin' role in Firestore.
+ * Middleware that verifies the caller is an admin via Firebase custom claims.
+ * Custom claims are only minted by the Admin SDK (admins approvals / server-side flows),
+ * so they cannot be forged by users writing their own Firestore documents.
+ *
+ * Self-healing: legacy admins seeded directly in Firestore (users/{uid}.role = "admin")
+ * are minted a custom claim on first use so existing admins are not locked out.
+ * The doc write itself is now blocked for clients by firestore.rules, so this
+ * fallback cannot be abused to self-promote.
+ *
  * Must be used AFTER authMiddleware.
  */
 export async function adminMiddleware(
@@ -17,23 +25,26 @@ export async function adminMiddleware(
     return;
   }
 
+  if (req.role === 'admin') {
+    next();
+    return;
+  }
+
+  // Legacy fallback: Firestore-seeded admin (no claim yet;). Try to mint now.
   try {
     const userDoc = await adminDb.collection(COLLECTIONS.USERS).doc(req.uid).get();
-    
-    if (!userDoc.exists) {
-      res.status(403).json({ error: 'User not found' });
+    if (userDoc.exists && userDoc.data()?.role === 'admin') {
+      req.role = 'admin';
+      await adminAuth.setCustomUserClaims(req.uid, { role: 'admin' }).catch((err) => {
+        console.error('Failed to mint admin claim for legacy admin:', err);
+      });
+      next();
       return;
     }
-
-    const userData = userDoc.data();
-    if (userData?.role !== 'admin') {
-      res.status(403).json({ error: 'Forbidden: Admin access required' });
-      return;
-    }
-
-    next();
   } catch (error) {
-    console.error('Error verifying admin status:', error);
-    res.status(500).json({ error: 'Internal server error while verifying authorization' });
+    console.error('Admin fallback lookup failed:', error);
   }
+
+  res.status(403).json({ error: 'Forbidden: Admin access required' });
 }
+

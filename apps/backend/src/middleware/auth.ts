@@ -4,6 +4,7 @@ import { adminAuth } from '../firebase-admin';
 export interface AuthenticatedRequest extends Request {
   uid?: string;
   role?: string;
+  verified?: boolean;
 }
 
 /**
@@ -27,7 +28,8 @@ export async function authMiddleware(
   try {
     const decodedToken = await adminAuth.verifyIdToken(token);
     req.uid = decodedToken.uid;
-    req.role = decodedToken.role as string | undefined;
+    req.role = (decodedToken.role as string | undefined) || (decodedToken.customClaims?.role as string | undefined);
+    req.verified = (decodedToken.customClaims?.verified as boolean | undefined) || undefined;
     next();
   } catch (error) {
     res.status(401).json({ error: 'Invalid or expired token' });
